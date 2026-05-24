@@ -26,5 +26,8 @@ jobs:
       - name: Verificar liting
         run: npm run lint
 
+      - name: Fazer testes
+        run: npm run test
+
       - name: Testar build
         run: npm run build
