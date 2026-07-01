@@ -4,6 +4,7 @@ import App from '../App.tsx';
 
 import { NotFound } from '@/pages/Not Found/NotFound.tsx';
 import Login from '@/pages/Login/Login.tsx';
+import Register from '@/pages/Register/Register.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
   },
   { path: '*', element: <NotFound /> },
 ]);

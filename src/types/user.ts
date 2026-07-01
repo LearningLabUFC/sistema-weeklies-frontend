@@ -11,3 +11,13 @@ export interface User {
   status_id: string;
   global_role: string;
 }
+
+export interface RegisterData {
+  nome_completo: string;
+  email: string;
+  senha: string;
+  data_nascimento: string;
+  matricula: string;
+  curso_id: string;
+  metas_horas_semanais: number;
+}
