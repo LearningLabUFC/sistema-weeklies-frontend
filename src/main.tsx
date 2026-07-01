@@ -4,13 +4,16 @@ import { RouterProvider } from 'react-router-dom';
 
 import { router } from './routes/index.tsx';
 import { AlertDialogProvider } from './hooks/useAlertDialog.tsx';
+import { AuthProvider } from './context/AuthContext.tsx';
 
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AlertDialogProvider>
-      <RouterProvider router={router} />
-    </AlertDialogProvider>
+    <AuthProvider>
+      <AlertDialogProvider>
+        <RouterProvider router={router} />
+      </AlertDialogProvider>
+    </AuthProvider>
   </StrictMode>,
 );
