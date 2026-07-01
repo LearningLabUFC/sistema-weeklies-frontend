@@ -154,7 +154,7 @@ export function NotFound() {
         </p>
 
         <Link
-          to="/"
+          to="/login"
           className="group flex items-center justify-center gap-3 w-full sm:w-auto px-8 h-14 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl shadow-lg shadow-[#4F46E5]/25 hover:shadow-[#4F46E5]/40 transition-all duration-300 font-medium text-[17px] active:scale-95"
         >
           <Home className="w-5 h-5 transition-transform group-hover:-translate-y-1" />
