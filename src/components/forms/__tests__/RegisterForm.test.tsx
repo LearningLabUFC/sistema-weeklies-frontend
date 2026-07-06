@@ -12,6 +12,12 @@ vi.mock('@/context/AlertDialogContext', () => ({
   useAlertDialog: vi.fn(),
 }));
 
+beforeAll(() => {
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+  window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+});
+
 describe('RegisterForm Component', () => {
   const mockRegisterUser = vi.fn();
   const mockShowAlertDialog = vi.fn();
@@ -96,15 +102,16 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/data de nascimento/i), {
       target: { value: '2004-05-13' },
     });
-    try {
-      await mockRegisterUser();
-    } catch (e) {
-      mockShowAlertDialog({
-        type: 'error',
-        title: 'Erro no Cadastro',
-        message: (e as Error).message,
-      });
-    }
+
+    const selectTrigger = screen.getByRole('combobox');
+    fireEvent.click(selectTrigger);
+
+    const courseOption = await screen.findByRole('option', {
+      name: 'Engenharia de Software',
+    });
+    fireEvent.click(courseOption);
+
+    fireEvent.click(screen.getByRole('button', { name: /registrar/i }));
 
     await waitFor(() => {
       expect(mockShowAlertDialog).toHaveBeenCalledWith(
