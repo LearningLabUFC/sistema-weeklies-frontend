@@ -10,14 +10,45 @@ import ForgotPassword from '@/pages/ForgotPassword/ForgotPassword.tsx';
 import VerifyCode from '@/pages/VerifyCode/VerifyCode.tsx';
 import ResetPassword from '@/pages/ResetPassword/ResetPassword.tsx';
 
+import Profile from '@/pages/Profile/Profile.tsx';
+
 export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      { path: '/profile', element: <div>profile</div> },
-      { path: '/', element: <App /> },
+      {
+        path: '/',
+        element: <App />,
+        children: [
+          {
+            index: true,
+            element: <div>Bem vindo ao Dashboard (Página Inicial)</div>,
+          },
+          {
+            path: '/profile',
+            element: <Profile />,
+          },
+          {
+            path: '/dashboard',
+            element: <div>Página do Dashboard</div>,
+          },
+          {
+            path: '/presenca',
+            element: <div>Página de fazer presença</div>,
+          },
+          {
+            path: '/ponto',
+            element: <div>Página de bater ponto</div>,
+          },
+          {
+            path: '/weeklies',
+            element: <div>Minhas Weeklies</div>,
+          },
+        ],
+      },
     ],
   },
+
   {
     path: '/login',
     element: <Login />,
