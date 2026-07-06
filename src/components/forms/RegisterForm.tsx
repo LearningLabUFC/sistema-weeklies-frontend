@@ -24,15 +24,9 @@ const registerSchema = z.object({
   password: z.string().min(8, 'A senha deve conter no mínimo 8 caracteres'),
   matricula: z.string().min(6, 'A matrícula deve ter no mínimo 6 dígitos'),
   birth: z.string().min(1, 'A data de nascimento é obrigatória'),
-  curso: z.enum(
-    [
-      'Engenharia de Software',
-      'Engenharia de Produção',
-      '>Engenharia Civil',
-      'Engenharia Mecânica',
-    ],
-    'Selecione um curso',
-  ),
+  curso: z
+    .string({ message: 'Selecione um curso' })
+    .min(1, 'Selecione um curso'),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
