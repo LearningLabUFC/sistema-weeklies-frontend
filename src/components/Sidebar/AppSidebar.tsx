@@ -53,11 +53,11 @@ const AppSidebar = () => {
       <SidebarHeader className="p-4 border-b border-sidebar-border bg-sidebar">
         <figure className="flex items-center gap-2 mb-1">
           <img
-            className="w-10 h-10 p-2 rounded-lg flex items-center justify-center shrink-0 bg-indigo-600"
+            className="w-10 h-10 p-2 rounded-lg flex items-center justify-center shrink-0 bg-indigo-600 dark:bg-indigo-500"
             src={images.white_logo}
             alt="Logo LearningLab"
           />
-          <h1 className="text-xl font-bold text-indigo-700 truncate">
+          <h1 className="text-xl font-bold text-indigo-700 dark:text-indigo-400 truncate">
             LearningLab
           </h1>
         </figure>
@@ -85,7 +85,7 @@ const AppSidebar = () => {
                       isActive={isActive}
                       tooltip={link.label}
                       onClick={() => setOpenMobile(false)}
-                      className="py-6 data-[active=true]:bg-indigo-600 data-[active=true]:text-white hover:data-[active=true]:bg-indigo-700 hover:data-[active=true]:text-white"
+                      className="py-6 data-[active=true]:bg-indigo-600 dark:data-[active=true]:bg-indigo-600 data-[active=true]:text-white hover:data-[active=true]:bg-indigo-700 dark:hover:data-[active=true]:bg-indigo-700 hover:data-[active=true]:text-white"
                     >
                       <Link to={link.to} className="flex items-center gap-2">
                         <link.icon className="w-5 h-5" />

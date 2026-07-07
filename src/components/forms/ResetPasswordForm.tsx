@@ -84,7 +84,10 @@ export const ResetPasswordForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="password" className="font-semibold text-sm">
+        <Label
+          htmlFor="password"
+          className="font-semibold text-sm text-slate-900 dark:text-slate-200"
+        >
           Nova Senha
         </Label>
         <div className="relative">
@@ -92,7 +95,7 @@ export const ResetPasswordForm = ({
             id="password"
             type={showPassword ? 'text' : 'password'}
             placeholder="Sua nova senha segura"
-            className={`bg-slate-100 border-transparent pr-10 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white h-11 ${
+            className={`bg-slate-100 dark:bg-slate-900 border-transparent pr-10 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 text-slate-900 dark:text-slate-50 h-11 ${
               errors.password
                 ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                 : ''
@@ -103,7 +106,7 @@ export const ResetPasswordForm = ({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none"
           >
             {showPassword ? (
               <EyeOff className="h-5 w-5" />
@@ -113,14 +116,17 @@ export const ResetPasswordForm = ({
           </button>
         </div>
         {errors.password && (
-          <p className="text-xs text-red-500 font-medium">
+          <p className="text-xs text-red-500 dark:text-red-400 font-medium">
             {errors.password.message}
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="font-semibold text-sm">
+        <Label
+          htmlFor="confirmPassword"
+          className="font-semibold text-sm text-slate-900 dark:text-slate-200"
+        >
           Confirmar Nova Senha
         </Label>
         <div className="relative">
@@ -128,7 +134,7 @@ export const ResetPasswordForm = ({
             id="confirmPassword"
             type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Repita a nova senha"
-            className={`bg-slate-100 border-transparent pr-10 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white h-11 ${
+            className={`bg-slate-100 dark:bg-slate-900 border-transparent pr-10 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 text-slate-900 dark:text-slate-50 h-11 ${
               errors.confirmPassword
                 ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                 : ''
@@ -139,7 +145,7 @@ export const ResetPasswordForm = ({
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none"
           >
             {showConfirmPassword ? (
               <EyeOff className="h-5 w-5" />
@@ -149,7 +155,7 @@ export const ResetPasswordForm = ({
           </button>
         </div>
         {errors.confirmPassword && (
-          <p className="text-xs text-red-500 font-medium">
+          <p className="text-xs text-red-500 dark:text-red-400 font-medium">
             {errors.confirmPassword.message}
           </p>
         )}

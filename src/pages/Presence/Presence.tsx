@@ -7,7 +7,6 @@ import PresenceSuccessCard from '@/components/PresenceSuccessCard/PresenceSucces
 type PresenceStatus = 'encerrada' | 'ativa' | 'confirmada';
 
 const Presence = () => {
-  // pra mudar a apresença é aqui nesse use state
   const [status, setStatus] = useState<PresenceStatus>('encerrada');
   const [confirmationDate, setConfirmationDate] = useState<Date | null>(null);
 
@@ -16,15 +15,15 @@ const Presence = () => {
     setStatus('confirmada');
   };
 
-  const isPresenceActive = status === 'ativa';
+  const isPresenceActive = status === 'encerrada';
 
   return (
     <div className="w-full max-w-3xl mx-auto py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50">
           Presença
         </h1>
-        <p className="text-sm sm:text-base text-slate-500 mt-1">
+        <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
           Confirme sua presença digitando a palavra informada na reunião
         </p>
       </div>

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CalendarDays, Clock, Mail, Pencil, X } from 'lucide-react';
 
+import { ThemeToggle } from '@/components/ThemeToggle/ThemeToggle';
 import InputGroup from '@/components/InputGroup/InputGroup';
 import { images } from '@/assets/images';
 
@@ -161,14 +162,20 @@ const Profile = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Perfil</h1>
-        <p className="text-slate-500 mt-1">
-          Gerencie suas informações pessoais e credenciais.
-        </p>
+      {/* Cabeçalho atualizado com o ThemeToggle ao lado do título */}
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+            Perfil
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Gerencie suas informações pessoais e credenciais.
+          </p>
+        </div>
+        <ThemeToggle />
       </div>
 
-      <Card className="rounded-2xl shadow-sm border-transparent bg-white overflow-hidden">
+      <Card className="rounded-2xl shadow-sm border-transparent dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden">
         <CardContent className="p-6 sm:p-8">
           {!isEditing ? (
             <div className="space-y-8">
@@ -180,18 +187,18 @@ const Profile = () => {
                       : images.default_profile
                   }
                   alt={profileData.nome_completo}
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-indigo-50 shadow-sm"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-indigo-50 dark:border-indigo-950 shadow-sm"
                 />
 
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-slate-900">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                     {profileData.nome_completo}
                   </h2>
 
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <Badge
                       variant="secondary"
-                      className="bg-blue-100 text-blue-700 hover:bg-blue-100 pointer-events-none"
+                      className="bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/30 pointer-events-none"
                     >
                       {roleLabel}
                     </Badge>
@@ -199,7 +206,7 @@ const Profile = () => {
                       <Badge
                         key={sector}
                         variant="secondary"
-                        className="bg-purple-100 text-purple-700 hover:bg-purple-100 pointer-events-none"
+                        className="bg-purple-100 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/30 pointer-events-none"
                       >
                         {sector}
                       </Badge>
@@ -210,39 +217,39 @@ const Profile = () => {
                 <Button
                   onClick={() => setIsEditing(true)}
                   variant="outline"
-                  className="w-full sm:w-auto text-indigo-600 border-indigo-200 hover:bg-indigo-50 mt-4 sm:mt-0"
+                  className="w-full sm:w-auto text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-800 dark:hover:bg-indigo-950 mt-4 sm:mt-0"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Editar Perfil
                 </Button>
               </div>
 
-              <hr className="border-slate-100" />
+              <hr className="border-slate-100 dark:border-slate-800" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <span className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
                     <Mail className="w-4 h-4" /> Email
                   </span>
-                  <p className="text-slate-900 font-medium">
+                  <p className="text-slate-900 dark:text-slate-200 font-medium">
                     {profileData.email}
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
                     <CalendarDays className="w-4 h-4" /> Data de Ingresso
                   </span>
-                  <p className="text-slate-900 font-medium">
+                  <p className="text-slate-900 dark:text-slate-200 font-medium">
                     {formatDate(profileData.data_ingresso)}
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
                     <Clock className="w-4 h-4" /> Meta Semanal
                   </span>
-                  <p className="text-slate-900 font-medium">
+                  <p className="text-slate-900 dark:text-slate-200 font-medium">
                     {profileData.meta_horas_semanais} horas
                   </p>
                 </div>
@@ -251,7 +258,7 @@ const Profile = () => {
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
                   Editar Perfil
                 </h2>
                 <Button
@@ -260,7 +267,7 @@ const Profile = () => {
                   size="icon"
                   onClick={() => setIsEditing(false)}
                 >
-                  <X className="w-5 h-5 text-slate-500" />
+                  <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                 </Button>
               </div>
 
@@ -272,7 +279,7 @@ const Profile = () => {
                 registration={register('foto_perfil')}
                 error={errors.foto_perfil?.message as string}
                 disabled={isSubmitting}
-                className="file:mr-4 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer h-auto py-2"
+                className="file:mr-4 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 dark:hover:file:bg-indigo-900/50 cursor-pointer h-auto py-2"
               />
 
               <InputGroup
@@ -307,7 +314,7 @@ const Profile = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-32"
+                  className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white min-w-32"
                 >
                   {isSubmitting ? 'Salvando...' : 'Salvar alterações'}
                 </Button>
@@ -316,6 +323,7 @@ const Profile = () => {
                   variant="outline"
                   onClick={() => setIsEditing(false)}
                   disabled={isSubmitting}
+                  className="dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                 >
                   Cancelar
                 </Button>
