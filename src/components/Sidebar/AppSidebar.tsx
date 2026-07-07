@@ -19,12 +19,11 @@ import {
 } from '../ui/sidebar';
 
 import { getNavigationLinks, getRoleDetails } from '@/utils/navigationLinks';
-
 import { images } from '@/assets/images';
 
 const AppSidebar = () => {
   const { user, logout } = useAuth();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, isMobile } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { showAlertDialog } = useAlertDialog();
@@ -50,7 +49,7 @@ const AppSidebar = () => {
   };
 
   return (
-    <Sidebar>
+    <Sidebar side={isMobile ? 'right' : 'left'}>
       <SidebarHeader className="p-4 border-b border-sidebar-border bg-sidebar">
         <figure className="flex items-center gap-2 mb-1">
           <img
