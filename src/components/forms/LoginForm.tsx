@@ -81,7 +81,7 @@ const LoginForm = () => {
       <div className="flex justify-end">
         <Link
           to="/forgot-password"
-          className="text-xs sm:text-sm text-indigo-500 hover:text-indigo-600 hover:underline"
+          className="text-xs sm:text-sm text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline"
         >
           Esqueci minha senha
         </Link>
@@ -90,16 +90,16 @@ const LoginForm = () => {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white h-11 sm:h-12 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-70"
+        className="w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white h-11 sm:h-12 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-70"
       >
         {isLoading ? 'Entrando...' : 'Entrar'}
       </Button>
 
-      <div className="text-center text-xs sm:text-sm text-slate-500 pt-2">
+      <div className="text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400 pt-2">
         Não tem uma conta?{' '}
         <Link
           to="/register"
-          className="text-indigo-500 hover:text-indigo-600 hover:underline font-medium"
+          className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline font-medium"
         >
           Registre-se
         </Link>

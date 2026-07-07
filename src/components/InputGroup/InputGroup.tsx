@@ -18,18 +18,25 @@ const InputGroup = ({
 }: InputGroupProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="font-semibold text-sm">
+      <Label
+        htmlFor={id}
+        className="font-semibold text-sm text-slate-900 dark:text-slate-200"
+      >
         {label}
       </Label>
       <Input
         id={id}
-        className={`bg-slate-100 border-transparent focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white h-11 ${
+        className={`bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 text-slate-900 dark:text-slate-50 h-11 ${
           error ? 'ring-2 ring-red-500 focus-visible:ring-red-500' : ''
         }`}
         {...registration}
         {...props}
       />
-      {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+      {error && (
+        <p className="text-xs text-red-500 dark:text-red-400 font-medium">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

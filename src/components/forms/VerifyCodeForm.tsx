@@ -133,7 +133,7 @@ export const VerifyCodeForm = ({ email }: VerifyCodeFormProps) => {
             onKeyDown={e => handleKeyDown(index, e)}
             onPaste={handlePaste}
             disabled={isLoading}
-            className="w-10 h-12 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-bold text-indigo-900 bg-slate-100 border-transparent focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white transition-all disabled:opacity-70"
+            className="w-10 h-12 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-bold text-indigo-900 dark:text-indigo-100 bg-slate-100 dark:bg-slate-900 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 transition-all disabled:opacity-70"
           />
         ))}
       </div>
@@ -151,7 +151,7 @@ export const VerifyCodeForm = ({ email }: VerifyCodeFormProps) => {
           type="button"
           onClick={() => navigate('/forgot-password')}
           disabled={isLoading}
-          className="w-full cursor-pointer bg-transparent hover:bg-transparent text-slate-500 hover:text-indigo-600 hover:underline flex items-center justify-center gap-2"
+          className="w-full cursor-pointer bg-transparent hover:bg-transparent text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:underline flex items-center justify-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" /> Voltar
         </Button>

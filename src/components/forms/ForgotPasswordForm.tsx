@@ -38,7 +38,6 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
     setIsLoading(true);
     try {
       await api.post('/auth/forgot-password', { email: data.email });
-
       onSuccess();
     } catch (error) {
       let errorMessage =
@@ -92,7 +91,7 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
         type="button"
         onClick={() => navigate('/login')}
         disabled={isLoading}
-        className="w-full cursor-pointer bg-transparent hover:bg-transparent text-slate-500 hover:text-indigo-600 hover:underline mt-2 flex items-center justify-center gap-2"
+        className="w-full cursor-pointer bg-transparent hover:bg-transparent text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:underline mt-2 flex items-center justify-center gap-2"
       >
         <ArrowLeft className="w-4 h-4" /> Voltar para a Tela de Login
       </Button>

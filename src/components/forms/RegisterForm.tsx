@@ -133,11 +133,15 @@ const RegisterForm = () => {
           registration={register('birth')}
           error={errors.birth?.message}
           disabled={isLoading}
+          className="dark:scheme-dark" // Permite calendário em dark mode nativo do navegador
         />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="curso" className="font-semibold text-xs sm:text-sm">
+        <Label
+          htmlFor="curso"
+          className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-200"
+        >
           Curso
         </Label>
         <Controller
@@ -150,7 +154,7 @@ const RegisterForm = () => {
               disabled={isLoading}
             >
               <SelectTrigger
-                className={`w-full bg-slate-100 border-transparent focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white h-10 text-sm ${
+                className={`w-full bg-slate-100 dark:bg-slate-900 border-transparent focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 h-10 text-sm ${
                   errors.curso
                     ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                     : ''
@@ -171,7 +175,7 @@ const RegisterForm = () => {
           )}
         />
         {errors.curso && (
-          <p className="text-xs text-red-500 font-medium">
+          <p className="text-xs text-red-500 dark:text-red-400 font-medium">
             {errors.curso.message}
           </p>
         )}
@@ -180,16 +184,16 @@ const RegisterForm = () => {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full mt-2 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white h-10 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-70"
+        className="w-full mt-2 cursor-pointer bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white h-10 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-70"
       >
         {isLoading ? 'Registrando...' : 'Registrar'}
       </Button>
 
-      <div className="text-center text-xs sm:text-sm text-slate-500 pt-1">
+      <div className="text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400 pt-1">
         Já possui uma conta?{' '}
         <Link
           to="/login"
-          className="text-indigo-500 hover:text-indigo-600 hover:underline font-medium"
+          className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline font-medium"
         >
           Faça Login
         </Link>

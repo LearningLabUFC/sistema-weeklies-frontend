@@ -15,11 +15,13 @@ const HeaderLogo = ({ title = 'LearningLab', subtitle }: HeaderLogoProps) => {
           className="h-12 w-12 sm:h-14 sm:w-14"
         />
       </div>
-      <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-1">
+      <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-1">
         {title}
       </h1>
       {subtitle && (
-        <p className="text-slate-500 text-xs sm:text-sm">{subtitle}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
+          {subtitle}
+        </p>
       )}
     </figure>
   );
