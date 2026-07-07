@@ -11,11 +11,11 @@ export default function App() {
         <div className="flex min-h-screen w-full bg-slate-50 font-sans text-slate-900">
           <AppSidebar />
           <div className="flex-1 flex flex-col min-w-0">
-            <header className="flex h-14 items-center gap-4 border-b bg-white px-4 sticky top-0 z-30 md:hidden">
-              <SidebarTrigger className="text-indigo-600" />
+            <header className="flex h-14 items-center gap-4 border-b justify-end px-2 sticky top-0 z-30 md:hidden">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-indigo-600">LearningLab</span>
               </div>
+              <SidebarTrigger className="text-indigo-600 w-12 h-12 flex items-center justify-center [&>svg]:w-6 [&>svg]:h-6" />
             </header>
 
             <main className="min-h-full px-6 bg-linear-to-br from-indigo-50 via-white to-indigo-50 font-sans text-slate-900">

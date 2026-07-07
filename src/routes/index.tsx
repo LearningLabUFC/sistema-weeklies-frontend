@@ -9,8 +9,8 @@ import Register from '@/pages/Register/Register.tsx';
 import ForgotPassword from '@/pages/ForgotPassword/ForgotPassword.tsx';
 import VerifyCode from '@/pages/VerifyCode/VerifyCode.tsx';
 import ResetPassword from '@/pages/ResetPassword/ResetPassword.tsx';
-
 import Profile from '@/pages/Profile/Profile.tsx';
+import Presence from '@/pages/Presence/Presence.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '/presenca',
-            element: <div>Página de fazer presença</div>,
+            element: <Presence />,
           },
           {
             path: '/ponto',
