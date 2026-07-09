@@ -166,10 +166,10 @@ const RegisterForm = () => {
                 <SelectItem value="3fa85f64-5717-4562-b3fc-2c963f66afa6">
                   Ciência da Computação
                 </SelectItem>
-                <SelectItem value="es">Engenharia de Software</SelectItem>
-                <SelectItem value="ep">Engenharia de Produção</SelectItem>
-                <SelectItem value="ec">Engenharia Civil</SelectItem>
-                <SelectItem value="em">Engenharia Mecânica</SelectItem>
+                <SelectItem value="1fa85f64-5717-4562-b3fc-2c963f66afa1">Engenharia de Software</SelectItem>
+                <SelectItem value="2fa85f64-5717-4562-b3fc-2c963f66afa2">Engenharia de Produção</SelectItem>
+                <SelectItem value="4fa85f64-5717-4562-b3fc-2c963f66afa4">Engenharia Civil</SelectItem>
+                <SelectItem value="5fa85f64-5717-4562-b3fc-2c963f66afa5">Engenharia Mecânica</SelectItem>
               </SelectContent>
             </Select>
           )}
