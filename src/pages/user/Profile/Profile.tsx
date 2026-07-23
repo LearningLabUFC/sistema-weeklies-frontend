@@ -15,6 +15,7 @@ import { CalendarDays, Clock, Mail, Pencil, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle/ThemeToggle';
 import InputGroup from '@/components/InputGroup/InputGroup';
 import { images } from '@/assets/images';
+import Header from '@/components/Header/Header';
 
 interface UserProfile {
   id: string;
@@ -162,16 +163,11 @@ const Profile = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Cabeçalho atualizado com o ThemeToggle ao lado do título */}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
-            Perfil
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Gerencie suas informações pessoais e credenciais.
-          </p>
-        </div>
+      <div className="flex justify-between">
+        <Header
+          title="Perfil"
+          subtitle="Gerencie suas informações pessoais e credenciais"
+        />
         <ThemeToggle />
       </div>
 
