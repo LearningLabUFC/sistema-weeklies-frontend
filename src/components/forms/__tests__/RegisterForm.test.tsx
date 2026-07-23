@@ -4,12 +4,16 @@ import { MemoryRouter } from 'react-router-dom';
 import RegisterForm from '../RegisterForm';
 import { useAuth } from '@/context/AuthContext';
 import { useAlertDialog } from '@/context/AlertDialogContext';
+import { api } from '@/lib/api';
 
 vi.mock('@/context/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 vi.mock('@/context/AlertDialogContext', () => ({
   useAlertDialog: vi.fn(),
+}));
+vi.mock('@/lib/api', () => ({
+  api: { get: vi.fn() },
 }));
 
 beforeAll(() => {
@@ -36,14 +40,21 @@ describe('RegisterForm Component', () => {
       showAlertDialog: mockShowAlertDialog,
       hideAlertDialog: vi.fn(),
     });
+    vi.mocked(api.get).mockResolvedValue({
+      data: [{ id: '1', nome: 'Engenharia de Software', ativo: true }],
+    });
   });
 
-  const renderComponent = () => {
+  const renderComponent = async () => {
     render(
       <MemoryRouter>
         <RegisterForm />
       </MemoryRouter>,
     );
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalled();
+    });
   };
 
   it('deve exibir erros de validação ao enviar um formulário vazio', async () => {
@@ -71,13 +82,15 @@ describe('RegisterForm Component', () => {
   });
 
   it('deve formatar o input de matrícula para aceitar apenas números', async () => {
-    renderComponent();
+    await renderComponent();
 
     const matriculaInput = screen.getByLabelText(/número da matrícula/i);
 
     fireEvent.input(matriculaInput, { target: { value: '123ABC45' } });
 
-    expect((matriculaInput as HTMLInputElement).value).toBe('12345');
+    await waitFor(() => {
+      expect((matriculaInput as HTMLInputElement).value).toBe('12345');
+    });
   });
 
   it('deve exibir o AlertDialog em caso de erro na API', async () => {
@@ -85,7 +98,7 @@ describe('RegisterForm Component', () => {
       new Error('Matrícula já cadastrada'),
     );
 
-    renderComponent();
+    await renderComponent();
 
     fireEvent.change(screen.getByLabelText(/nome completo/i), {
       target: { value: 'Fulano de tal' },
@@ -104,6 +117,11 @@ describe('RegisterForm Component', () => {
     });
 
     const selectTrigger = screen.getByRole('combobox');
+
+    await waitFor(() => {
+      expect(selectTrigger).not.toBeDisabled();
+    });
+
     fireEvent.click(selectTrigger);
 
     const courseOption = await screen.findByRole('option', {
