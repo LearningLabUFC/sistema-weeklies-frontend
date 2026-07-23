@@ -55,6 +55,9 @@ const RegisterForm = () => {
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      curso: '',
+    },
   });
 
   useEffect(() => {
