@@ -79,10 +79,16 @@ describe('AppSidebar Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    vi.stubEnv('VITE_SHOW_ALL_LINKS', 'false');
+
     vi.mocked(useAlertDialog).mockReturnValue({
       showAlertDialog: mockShowAlertDialog,
       hideAlertDialog: vi.fn(),
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   const renderComponent = () => {
