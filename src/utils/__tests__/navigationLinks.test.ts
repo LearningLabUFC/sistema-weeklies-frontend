@@ -4,6 +4,14 @@ import { adminLinks, leaderLinks, userLinks } from '@/data/data';
 
 describe('navigationLinks utility', () => {
   describe('getNavigationLinks', () => {
+    beforeEach(() => {
+      vi.stubEnv('VITE_SHOW_ALL_LINKS', 'false');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
     it('deve retornar links de admin para a role "admin"', () => {
       expect(getNavigationLinks('admin')).toEqual(adminLinks);
     });
@@ -15,6 +23,16 @@ describe('navigationLinks utility', () => {
     it('deve retornar links base para qualquer outra role', () => {
       expect(getNavigationLinks('aluno')).toEqual(userLinks);
       expect(getNavigationLinks('')).toEqual(userLinks);
+    });
+
+    it('deve retornar todos os links quando VITE_SHOW_ALL_LINKS for true', () => {
+      const allLinks = [...adminLinks, ...leaderLinks, ...userLinks].filter(
+        (link, index, self) =>
+          index === self.findIndex(item => item.to === link.to),
+      );
+
+      vi.stubEnv('VITE_SHOW_ALL_LINKS', 'true');
+      expect(getNavigationLinks('aluno')).toEqual(allLinks);
     });
   });
 

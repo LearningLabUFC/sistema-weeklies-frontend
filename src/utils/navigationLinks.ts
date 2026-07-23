@@ -1,10 +1,10 @@
 import { adminLinks, leaderLinks, userLinks } from '@/data/data';
 import type { NavigationLink } from '@/types/sidebar';
 
-const SHOW_ALL_LINKS = import.meta.env.VITE_SHOW_ALL_LINKS === 'true';
+const getNavigationLinks = (role: string): NavigationLink[] => {
+  const showAllLinks = import.meta.env.VITE_SHOW_ALL_LINKS === 'true';
 
-export const getNavigationLinks = (role: string): NavigationLink[] => {
-  if (SHOW_ALL_LINKS) {
+  if (showAllLinks) {
     const allLinks = [...adminLinks, ...leaderLinks, ...userLinks];
 
     return allLinks.filter(
@@ -17,6 +17,8 @@ export const getNavigationLinks = (role: string): NavigationLink[] => {
   if (role === 'leader') return leaderLinks;
   return userLinks;
 };
+
+export { getNavigationLinks };
 
 export const getRoleDetails = (role: string) => {
   switch (role) {
