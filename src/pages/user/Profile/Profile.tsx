@@ -171,7 +171,7 @@ const Profile = () => {
         <ThemeToggle />
       </div>
 
-      <Card className="rounded-2xl shadow-sm border-transparent dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden">
+      <Card className="rounded-2xl shadow-sm border-transparent dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
         <CardContent className="p-6 sm:p-8">
           {!isEditing ? (
             <div className="space-y-8">
