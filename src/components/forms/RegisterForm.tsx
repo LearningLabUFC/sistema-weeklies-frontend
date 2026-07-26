@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +17,14 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useAlertDialog } from '@/context/AlertDialogContext';
 import InputGroup from '@/components/InputGroup/InputGroup';
+import { api } from '@/lib/api';
+import { formatName } from '@/utils/formatName';
+
+interface Curso {
+  id: string;
+  nome: string;
+  ativo: boolean;
+}
 
 const registerSchema = z.object({
   fullName: z.string().min(3, 'O nome completo é obrigatório'),
@@ -35,7 +43,10 @@ const RegisterForm = () => {
   const { registerUser } = useAuth();
   const navigate = useNavigate();
   const { showAlertDialog } = useAlertDialog();
+
+  const [cursos, setCursos] = useState<Curso[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingCursos, setLoadingCursos] = useState(true);
 
   const {
     register,
@@ -44,7 +55,39 @@ const RegisterForm = () => {
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      curso: '',
+    },
   });
+
+  useEffect(() => {
+    const fetchCursos = async () => {
+      try {
+        const response = await api.get<Curso[]>('/domain/cursos');
+        const cursosAtivos = response.data.filter(curso => curso.ativo);
+
+        setCursos(cursosAtivos);
+      } catch (error) {
+        if (error instanceof Error) {
+          showAlertDialog({
+            type: 'error',
+            title: 'Erro de Carregamento',
+            message: 'Não foi possível carregar a lista de cursos.',
+          });
+        } else {
+          showAlertDialog({
+            type: 'error',
+            title: 'Erro Inesperado',
+            message: 'Ocorreu um erro inesperado ao carregar os cursos.',
+          });
+        }
+      } finally {
+        setLoadingCursos(false);
+      }
+    };
+
+    fetchCursos();
+  }, [showAlertDialog]);
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
@@ -133,7 +176,7 @@ const RegisterForm = () => {
           registration={register('birth')}
           error={errors.birth?.message}
           disabled={isLoading}
-          className="dark:scheme-dark" // Permite calendário em dark mode nativo do navegador
+          className="dark:scheme-dark"
         />
       </div>
 
@@ -151,25 +194,29 @@ const RegisterForm = () => {
             <Select
               onValueChange={field.onChange}
               value={field.value}
-              disabled={isLoading}
+              disabled={isLoading || loadingCursos}
             >
               <SelectTrigger
-                className={`w-full bg-slate-100 dark:bg-slate-900 border-transparent focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 h-10 text-sm ${
+                className={`w-full bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 h-10 text-sm ${
                   errors.curso
                     ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                     : ''
                 }`}
               >
-                <SelectValue placeholder="Selecione seu curso" />
+                <SelectValue
+                  placeholder={
+                    loadingCursos
+                      ? 'Carregando cursos...'
+                      : 'Selecione seu curso'
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3fa85f64-5717-4562-b3fc-2c963f66afa6">
-                  Ciência da Computação
-                </SelectItem>
-                <SelectItem value="es">Engenharia de Software</SelectItem>
-                <SelectItem value="ep">Engenharia de Produção</SelectItem>
-                <SelectItem value="ec">Engenharia Civil</SelectItem>
-                <SelectItem value="em">Engenharia Mecânica</SelectItem>
+                {cursos.map(curso => (
+                  <SelectItem key={curso.id} value={curso.id}>
+                    {formatName(curso.nome)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
