@@ -22,7 +22,6 @@ export interface PresenceRecord {
   present: boolean;
 }
 
-
 export const MOCK_USERS: User[] = [
   {
     id: '1',
