@@ -11,6 +11,7 @@ interface AuthContextData {
   registerUser: (data: RegisterData) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  checkUserStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -74,6 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (apiMessage) {
         throw new Error(apiMessage, { cause: error });
       } else if (apiDetail) {
+        if (typeof apiDetail === 'string') {
+          throw new Error(apiDetail, { cause: error });
+        }
+
         throw new Error('Erro de validação nos dados enviados.', {
           cause: error,
         });
@@ -91,6 +96,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const checkUserStatus = async () => {
+    try {
+      const response = await api.get('/users/me');
+      const updatedUser = response.data;
+
+      setUser(updatedUser);
+      localStorage.setItem('@LearningLab:user', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Erro ao verificar status do usuário:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         registerUser,
         logout,
         loading,
+        checkUserStatus,
       }}
     >
       {children}
