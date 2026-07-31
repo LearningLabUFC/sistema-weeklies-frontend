@@ -95,7 +95,7 @@ describe('RegisterForm Component', () => {
 
   it('deve exibir o AlertDialog em caso de erro na API', async () => {
     mockRegisterUser.mockRejectedValueOnce(
-      new Error('Matrícula já cadastrada'),
+      new Error('E-mail já cadastrado no sistema'),
     );
 
     await renderComponent();
@@ -136,9 +136,56 @@ describe('RegisterForm Component', () => {
         expect.objectContaining({
           type: 'error',
           title: 'Erro no Cadastro',
-          message: 'Matrícula já cadastrada',
+          message: 'E-mail já cadastrado no sistema',
         }),
       );
+    });
+  });
+
+  it('deve exibir erro específico abaixo do input quando a API retornar erro de matrícula', async () => {
+    mockRegisterUser.mockRejectedValueOnce(
+      new Error('Esta matrícula já pertence a outro usuário.'),
+    );
+
+    await renderComponent();
+
+    fireEvent.change(screen.getByLabelText(/nome completo/i), {
+      target: { value: 'Fulano de tal' },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'fulano@teste.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/senha/i), {
+      target: { value: 'senhaSegura123' },
+    });
+    fireEvent.input(screen.getByLabelText(/número da matrícula/i), {
+      target: { value: '123456' },
+    });
+    fireEvent.change(screen.getByLabelText(/data de nascimento/i), {
+      target: { value: '2004-05-13' },
+    });
+
+    const selectTrigger = screen.getByRole('combobox');
+
+    await waitFor(() => {
+      expect(selectTrigger).not.toBeDisabled();
+    });
+
+    fireEvent.click(selectTrigger);
+
+    const courseOption = await screen.findByRole('option', {
+      name: 'Engenharia de Software',
+    });
+    fireEvent.click(courseOption);
+
+    fireEvent.click(screen.getByRole('button', { name: /registrar/i }));
+
+    await waitFor(() => {
+      expect(mockShowAlertDialog).not.toHaveBeenCalled();
+
+      expect(
+        screen.getByText('Esta matrícula já pertence a outro usuário.'),
+      ).toBeInTheDocument();
     });
   });
 });
