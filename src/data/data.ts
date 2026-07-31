@@ -16,6 +16,7 @@ import {
   User,
   Users,
   UserStar,
+  UserRoundPlus,
 } from 'lucide-react';
 
 const baseLinks: NavigationLink[] = [
@@ -36,6 +37,11 @@ export const leaderLinks: NavigationLink[] = [
 export const adminLinks: NavigationLink[] = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/participantes', icon: Users, label: 'Participantes' },
+  {
+    to: '/admin/novos-participantes',
+    icon: UserRoundPlus,
+    label: 'Solicitações',
+  },
   { to: '/admin/projetos', icon: FolderKanban, label: 'Projetos' },
   { to: '/admin/perfil', icon: UserStar, label: 'Perfil' },
   {
