@@ -52,6 +52,7 @@ const RegisterForm = () => {
     register,
     handleSubmit,
     control,
+    setError,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -104,11 +105,18 @@ const RegisterForm = () => {
       navigate('/', { replace: true });
     } catch (error) {
       if (error instanceof Error) {
-        showAlertDialog({
-          type: 'error',
-          title: 'Erro no Cadastro',
-          message: error.message,
-        });
+        if (error.message.toLowerCase().includes('matrícula')) {
+          setError('matricula', {
+            type: 'manual',
+            message: error.message,
+          });
+        } else {
+          showAlertDialog({
+            type: 'error',
+            title: 'Erro no Cadastro',
+            message: error.message,
+          });
+        }
       } else {
         showAlertDialog({
           type: 'error',
