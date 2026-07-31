@@ -1,4 +1,4 @@
-import React, { useState, type ReactNode } from 'react';
+import React, { useState, useCallback, type ReactNode } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,15 +34,15 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<AlertOptions | null>(null);
 
-  const showAlertDialog = (newOptions: AlertOptions) => {
+  const showAlertDialog = useCallback((newOptions: AlertOptions) => {
     setOptions(newOptions);
     setIsOpen(true);
-  };
+  }, []);
 
-  const hideAlertDialog = () => {
+  const hideAlertDialog = useCallback(() => {
     setIsOpen(false);
     setTimeout(() => setOptions(null), 300);
-  };
+  }, []);
 
   const handleConfirm = () => {
     if (options?.onConfirm) options.onConfirm();
