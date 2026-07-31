@@ -35,6 +35,7 @@ describe('RegisterForm Component', () => {
       login: vi.fn(),
       logout: vi.fn(),
       loading: false,
+      checkUserStatus: vi.fn(),
     });
     vi.mocked(useAlertDialog).mockReturnValue({
       showAlertDialog: mockShowAlertDialog,

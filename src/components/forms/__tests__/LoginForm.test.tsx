@@ -27,6 +27,7 @@ describe('LoginForm Component', () => {
       logout: vi.fn(),
       registerUser: vi.fn(),
       loading: false,
+      checkUserStatus: vi.fn(),
     });
 
     vi.mocked(useAlertDialog).mockReturnValue({
