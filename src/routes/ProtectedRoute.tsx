@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Spinner } from '@/components/ui/spinner';
 
 export function ProtectedRoute() {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -20,6 +21,16 @@ export function ProtectedRoute() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  const isPending = user?.status_id === '1fa85f64-5717-4562-b3fc-2c963f66afa1';
+
+  if (isPending && location.pathname !== '/pending-approval') {
+    return <Navigate to="/pending-approval" replace />;
+  }
+
+  if (!isPending && location.pathname === '/pending-approval') {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
