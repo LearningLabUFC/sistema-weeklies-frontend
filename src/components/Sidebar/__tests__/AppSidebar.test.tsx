@@ -107,6 +107,7 @@ describe('AppSidebar Component', () => {
       login: vi.fn(),
       registerUser: vi.fn(),
       loading: false,
+      checkUserStatus: vi.fn(),
     });
 
     const { container } = render(
@@ -126,6 +127,7 @@ describe('AppSidebar Component', () => {
       login: vi.fn(),
       registerUser: vi.fn(),
       loading: false,
+      checkUserStatus: vi.fn(),
     });
 
     renderComponent();
@@ -144,6 +146,7 @@ describe('AppSidebar Component', () => {
       login: vi.fn(),
       registerUser: vi.fn(),
       loading: false,
+      checkUserStatus: vi.fn(),
     });
 
     renderComponent();
@@ -164,6 +167,7 @@ describe('AppSidebar Component', () => {
       login: vi.fn(),
       registerUser: vi.fn(),
       loading: false,
+      checkUserStatus: vi.fn(),
     });
 
     renderComponent();
