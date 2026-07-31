@@ -2,6 +2,7 @@ import AdminManagement from '@/pages/admin/AdminManagement/AdminManagement';
 import Dashboard from '@/pages/admin/Dashboard/Dashboard';
 import Frequencies from '@/pages/admin/Frequencies/Frequencies';
 import HourReport from '@/pages/admin/HourReport/HourReport';
+import NewRequest from '@/pages/admin/NewRequest/NewRequest';
 import Participants from '@/pages/admin/Participants/Participants';
 import Presence from '@/pages/admin/Presence/Presence';
 import Projects from '@/pages/admin/Projects/Projects';
@@ -43,6 +44,10 @@ export const adminRoutes: RouteObject[] = [
       {
         path: 'perfil',
         element: <Profile />,
+      },
+      {
+        path: 'novos-participantes',
+        element: <NewRequest />,
       },
     ],
   },
