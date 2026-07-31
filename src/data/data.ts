@@ -1,12 +1,16 @@
 import type { NavigationLink } from '@/types/sidebar';
 import {
   CalendarCheck,
+  Camera,
   CheckSquare,
   Clock,
   FileText,
   FolderKanban,
+  Globe,
   Home,
   LayoutDashboard,
+  Link2,
+  PlaySquare,
   ShieldAlert,
   ShieldCheck,
   User,
@@ -53,5 +57,28 @@ export const adminLinks: NavigationLink[] = [
     to: '/admin/gerenciar-admins',
     icon: ShieldAlert,
     label: 'Gerenciar Admins',
+  },
+];
+
+export const pendingApprovalLinks = [
+  {
+    title: 'Site Oficial do LearningLab',
+    url: 'https://learninglab.com.br/',
+    icon: Globe,
+  },
+  {
+    title: 'Instagram',
+    url: 'https://www.instagram.com/learninglabufc/',
+    icon: Camera,
+  },
+  {
+    title: 'YouTube',
+    url: 'https://www.youtube.com/channel/UCZGpt5Lolr7dYeOEHUuAfVg/featured',
+    icon: PlaySquare,
+  },
+  {
+    title: 'Outras Informações (Taplink)',
+    url: 'https://taplink.cc/learninglabufc',
+    icon: Link2,
   },
 ];
