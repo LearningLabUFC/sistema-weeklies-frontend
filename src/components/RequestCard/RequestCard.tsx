@@ -1,6 +1,7 @@
 import { BookOpen, Hash, CheckCircle, XCircle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { formatName } from '@/utils/formatName';
 
 export interface PendingUser {
   id: string;
@@ -52,7 +53,7 @@ export const RequestCard = ({
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-1">
             <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 truncate">
               <BookOpen className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-              <span className="truncate">{cursoNome}</span>
+              <span className="truncate">{formatName(cursoNome)}</span>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 truncate">
               <Hash className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />

@@ -38,7 +38,7 @@ const ForgotPassword = () => {
                 onClick={() => navigate('/login')}
                 className="w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white h-11 sm:h-12 rounded-lg text-sm sm:text-base transition-colors"
               >
-                Voltar para o Login
+                Voltar para o login
               </Button>
             </div>
           ) : (

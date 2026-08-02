@@ -253,19 +253,9 @@ const Profile = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
-                  Editar perfil
-                </h2>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsEditing(false)}
-                >
-                  <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                </Button>
-              </div>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-6">
+                Editar perfil
+              </h2>
 
               <InputGroup
                 id="foto_perfil"
