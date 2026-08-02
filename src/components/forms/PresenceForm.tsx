@@ -75,10 +75,11 @@ const PresenceForm = ({ isPresenceActive, onSuccess }: PresenceFormProps) => {
               type="text"
               disabled={!isPresenceActive || isLoading}
               placeholder="Digite a palavra informada na reunião"
-              className={`bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-900 text-slate-900 dark:text-slate-50 h-11 sm:h-12 text-sm disabled:opacity-60 disabled:cursor-not-allowed ${errors.keyword
+              className={`bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-900 text-slate-900 dark:text-slate-50 h-11 sm:h-12 text-sm disabled:opacity-60 disabled:cursor-not-allowed ${
+                errors.keyword
                   ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                   : 'focus-visible:ring-indigo-600'
-                }`}
+              }`}
               {...register('keyword')}
             />
             {errors.keyword && (

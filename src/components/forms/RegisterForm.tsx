@@ -205,10 +205,11 @@ const RegisterForm = () => {
               disabled={isLoading || loadingCursos}
             >
               <SelectTrigger
-                className={`w-full bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 !h-11 text-sm ${errors.curso
-                  ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
-                  : ''
-                  }`}
+                className={`w-full bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 !h-11 text-sm ${
+                  errors.curso
+                    ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
+                    : ''
+                }`}
               >
                 <SelectValue
                   placeholder={

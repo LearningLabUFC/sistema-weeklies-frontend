@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CalendarDays, Clock, Mail, Pencil, X } from 'lucide-react';
+import { CalendarDays, Clock, Mail, Pencil } from 'lucide-react';
 
 import { ThemeToggle } from '@/components/ThemeToggle/ThemeToggle';
 import InputGroup from '@/components/InputGroup/InputGroup';
