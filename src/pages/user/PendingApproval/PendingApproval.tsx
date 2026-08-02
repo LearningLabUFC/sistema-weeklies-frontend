@@ -28,16 +28,14 @@ export default function PendingApproval() {
 
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50">
-              Conta em Análise
+              Conta em análise
             </h1>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-              Sua conta foi registrada com sucesso! No momento, seu status é{' '}
-              <strong className="text-amber-500 dark:text-amber-400 font-semibold uppercase tracking-wider text-xs ml-1">
-                Pendente
-              </strong>
-              .
-              <br className="mt-1 block" />
-              Aguarde a aprovação de um administrador para acessar o sistema.
+              Sua conta foi registrada com sucesso e está{' '}
+              <span className="text-amber-500 dark:text-amber-400 font-semibold">
+                pendente de análise
+              </span>
+              . Aguarde a aprovação de um administrador para acessar o sistema.
             </p>
           </div>
         </div>
@@ -78,7 +76,7 @@ export default function PendingApproval() {
             className="w-full h-11 flex items-center justify-center gap-2 border-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
           >
             <LogOut size={18} />
-            Sair e voltar ao Login
+            Sair e voltar ao login
           </Button>
         </div>
       </div>

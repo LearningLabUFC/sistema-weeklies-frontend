@@ -27,7 +27,7 @@ export function EngagementSummaryCard({
         <div className="space-y-2">
           <div className="flex justify-between text-xs font-medium">
             <span className="text-slate-500 dark:text-slate-400">
-              Assiduidade em Encontros
+              Assiduidade em encontros
             </span>
             <span className="text-slate-900 dark:text-slate-100 font-bold">
               {presenceRate}%
@@ -44,7 +44,7 @@ export function EngagementSummaryCard({
         <div className="space-y-2">
           <div className="flex justify-between text-xs font-medium">
             <span className="text-slate-500 dark:text-slate-400">
-              Envios de Weeklies (Esta Semana)
+              Envios de weeklies (esta semana)
             </span>
             <span className="text-slate-900 dark:text-slate-100 font-bold">
               {submissionRate}%

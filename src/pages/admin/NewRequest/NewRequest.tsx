@@ -47,7 +47,7 @@ const NewRequest = () => {
       } catch {
         showAlertDialog({
           type: 'error',
-          title: 'Erro de Carregamento',
+          title: 'Erro de carregamento',
           message:
             'Não foi possível carregar a lista de solicitações pendentes.',
         });
@@ -69,7 +69,7 @@ const NewRequest = () => {
     } catch {
       showAlertDialog({
         type: 'error',
-        title: 'Erro de Atualização',
+        title: 'Erro de atualização',
         message: `Ocorreu um erro ao tentar ${status === 'ativo' ? 'aprovar' : 'rejeitar'} o usuário.`,
       });
     }
@@ -88,7 +88,7 @@ const NewRequest = () => {
     } catch {
       showAlertDialog({
         type: 'error',
-        title: 'Erro ao Aprovar Todos',
+        title: 'Erro ao aprovar todos',
         message: 'Ocorreu um erro ao tentar aprovar todas as solicitações.',
       });
     } finally {
@@ -117,7 +117,7 @@ const NewRequest = () => {
                 className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white h-9 px-4 text-sm shadow-sm transition-all"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                {isProcessingAll ? 'Aprovando...' : 'Aceitar Todos'}
+                {isProcessingAll ? 'Aprovando...' : 'Aceitar todos'}
               </Button>
             </div>
           )}

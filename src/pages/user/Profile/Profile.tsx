@@ -216,7 +216,7 @@ const Profile = () => {
                   className="w-full sm:w-auto text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-800 dark:hover:bg-indigo-950 mt-4 sm:mt-0"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
-                  Editar Perfil
+                  Editar perfil
                 </Button>
               </div>
 
@@ -234,7 +234,7 @@ const Profile = () => {
 
                 <div className="space-y-1">
                   <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4" /> Data de Ingresso
+                    <CalendarDays className="w-4 h-4" /> Data de ingresso
                   </span>
                   <p className="text-slate-900 dark:text-slate-200 font-medium">
                     {formatDate(profileData.data_ingresso)}
@@ -243,7 +243,7 @@ const Profile = () => {
 
                 <div className="space-y-1">
                   <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Meta Semanal
+                    <Clock className="w-4 h-4" /> Meta semanal
                   </span>
                   <p className="text-slate-900 dark:text-slate-200 font-medium">
                     {profileData.meta_horas_semanais} horas
@@ -255,7 +255,7 @@ const Profile = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
-                  Editar Perfil
+                  Editar perfil
                 </h2>
                 <Button
                   type="button"

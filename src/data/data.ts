@@ -21,9 +21,9 @@ import {
 
 const baseLinks: NavigationLink[] = [
   { to: '/', icon: Home, label: 'Dashboard' },
-  { to: '/weeklies', icon: FileText, label: 'Minhas Weeklies' },
+  { to: '/weeklies', icon: FileText, label: 'Minhas weeklies' },
   { to: '/presenca', icon: CheckSquare, label: 'Presença' },
-  { to: '/controle-horas', icon: Clock, label: 'Controle de Horas' },
+  { to: '/controle-horas', icon: Clock, label: 'Controle de horas' },
   { to: '/perfil', icon: User, label: 'Perfil' },
 ];
 
@@ -31,7 +31,7 @@ export const userLinks: NavigationLink[] = [...baseLinks];
 
 export const leaderLinks: NavigationLink[] = [
   ...baseLinks,
-  { to: 'lider/meu-projeto', icon: FolderKanban, label: 'Meu Projeto' },
+  { to: 'lider/meu-projeto', icon: FolderKanban, label: 'Meu projeto' },
 ];
 
 export const adminLinks: NavigationLink[] = [
@@ -52,23 +52,23 @@ export const adminLinks: NavigationLink[] = [
   {
     to: '/admin/presenca',
     icon: ShieldCheck,
-    label: 'Gerenciar Presença',
+    label: 'Gerenciar presença',
   },
   {
     to: '/admin/relatorio-horas',
     icon: Clock,
-    label: 'Relatório de Horas',
+    label: 'Relatório de horas',
   },
   {
     to: '/admin/gerenciar-admins',
     icon: ShieldAlert,
-    label: 'Gerenciar Admins',
+    label: 'Gerenciar admins',
   },
 ];
 
 export const pendingApprovalLinks = [
   {
-    title: 'Site Oficial do LearningLab',
+    title: 'Site oficial do LearningLab',
     url: 'https://learninglab.com.br/',
     icon: Globe,
   },
@@ -83,7 +83,7 @@ export const pendingApprovalLinks = [
     icon: PlaySquare,
   },
   {
-    title: 'Outras Informações (Taplink)',
+    title: 'Outras informações (Taplink)',
     url: 'https://taplink.cc/learninglabufc',
     icon: Link2,
   },

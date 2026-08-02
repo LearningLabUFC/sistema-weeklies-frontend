@@ -58,7 +58,7 @@ const PresenceForm = ({ isPresenceActive, onSuccess }: PresenceFormProps) => {
             <Key className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-50">
-            Confirmar Presença
+            Confirmar presença
           </h2>
         </div>
 
@@ -75,11 +75,10 @@ const PresenceForm = ({ isPresenceActive, onSuccess }: PresenceFormProps) => {
               type="text"
               disabled={!isPresenceActive || isLoading}
               placeholder="Digite a palavra informada na reunião"
-              className={`bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-900 text-slate-900 dark:text-slate-50 h-11 sm:h-12 text-sm disabled:opacity-60 disabled:cursor-not-allowed ${
-                errors.keyword
+              className={`bg-slate-50 dark:bg-slate-950 border-transparent focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-900 text-slate-900 dark:text-slate-50 h-11 sm:h-12 text-sm disabled:opacity-60 disabled:cursor-not-allowed ${errors.keyword
                   ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                   : 'focus-visible:ring-indigo-600'
-              }`}
+                }`}
               {...register('keyword')}
             />
             {errors.keyword && (
@@ -101,7 +100,7 @@ const PresenceForm = ({ isPresenceActive, onSuccess }: PresenceFormProps) => {
             disabled={!isPresenceActive || isLoading}
             className="w-full h-11 sm:h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Confirmando...' : 'Confirmar Presença'}
+            {isLoading ? 'Confirmando...' : 'Confirmar presença'}
           </Button>
         </form>
       </CardContent>

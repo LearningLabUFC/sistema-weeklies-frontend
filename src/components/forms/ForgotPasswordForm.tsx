@@ -84,7 +84,7 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
         disabled={isLoading}
         className="w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white h-11 sm:h-12 rounded-lg text-sm sm:text-base transition-colors disabled:opacity-70 mt-2"
       >
-        {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
+        {isLoading ? 'Enviando...' : 'Enviar link de recuperação'}
       </Button>
 
       <Button
@@ -93,7 +93,7 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
         disabled={isLoading}
         className="w-full cursor-pointer bg-transparent hover:bg-transparent text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:underline mt-2 flex items-center justify-center gap-2"
       >
-        <ArrowLeft className="w-4 h-4" /> Voltar para a Tela de Login
+        <ArrowLeft className="w-4 h-4" /> Voltar para a tela de login
       </Button>
     </form>
   );
