@@ -57,7 +57,7 @@ export function Dashboard() {
 
   const stats: StatCardProps[] = [
     {
-      label: 'Total de Alunos',
+      label: 'Total de alunos',
       value: allStudents.length,
       icon: Users,
       color:
@@ -66,7 +66,7 @@ export function Dashboard() {
       to: '/admin/participantes',
     },
     {
-      label: 'Alunos Ativos',
+      label: 'Alunos ativos',
       value: activeStudents.length,
       icon: TrendingUp,
       color:
@@ -93,7 +93,7 @@ export function Dashboard() {
       to: '/admin/projetos',
     },
     {
-      label: 'Taxa de Presença',
+      label: 'Taxa de presença',
       value: `${presenceRate}%`,
       icon: CalendarCheck,
       color:

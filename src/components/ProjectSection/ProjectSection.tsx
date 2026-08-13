@@ -21,7 +21,7 @@ export const ProjectSection = ({ project }: ProjectSectionProps) => {
       <div className="space-y-4">
         {project.past.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-1.5">
+            <h4 className="text-base sm:text-lg font-semibold text-foreground mb-1.5">
               O que fiz na semana passada
             </h4>
             <ul className="space-y-1">
@@ -39,7 +39,7 @@ export const ProjectSection = ({ project }: ProjectSectionProps) => {
 
         {project.current.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-1.5">
+            <h4 className="text-base sm:text-lg font-semibold text-foreground mb-1.5">
               O que vou fazer nesta semana
             </h4>
             <ul className="space-y-1">
@@ -61,7 +61,7 @@ export const ProjectSection = ({ project }: ProjectSectionProps) => {
             className="mt-4 bg-destructive/10 dark:bg-destructive/15 border-destructive/30 text-destructive dark:text-red-400"
           >
             <AlertCircle className="h-4 w-4 stroke-destructive dark:stroke-red-400" />
-            <AlertTitle className="font-semibold text-sm">
+            <AlertTitle className="font-semibold text-base">
               Impedimentos
             </AlertTitle>
             <AlertDescription className="mt-1">

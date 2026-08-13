@@ -72,13 +72,13 @@ const RegisterForm = () => {
         if (error instanceof Error) {
           showAlertDialog({
             type: 'error',
-            title: 'Erro de Carregamento',
+            title: 'Erro de carregamento',
             message: 'Não foi possível carregar a lista de cursos.',
           });
         } else {
           showAlertDialog({
             type: 'error',
-            title: 'Erro Inesperado',
+            title: 'Erro inesperado',
             message: 'Ocorreu um erro inesperado ao carregar os cursos.',
           });
         }
@@ -113,14 +113,14 @@ const RegisterForm = () => {
         } else {
           showAlertDialog({
             type: 'error',
-            title: 'Erro no Cadastro',
+            title: 'Erro no cadastro',
             message: error.message,
           });
         }
       } else {
         showAlertDialog({
           type: 'error',
-          title: 'Erro Inesperado',
+          title: 'Erro inesperado',
           message: 'Ocorreu um erro ao processar seu cadastro.',
         });
       }
@@ -133,9 +133,9 @@ const RegisterForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
       <InputGroup
         id="fullName"
-        label="Nome Completo"
+        label="Nome completo"
         type="text"
-        placeholder="Seu Nome Completo"
+        placeholder="Seu nome completo"
         registration={register('fullName')}
         error={errors.fullName?.message}
         disabled={isLoading}
@@ -164,7 +164,7 @@ const RegisterForm = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <InputGroup
           id="matricula"
-          label="Número da Matrícula"
+          label="Número da matrícula"
           type="text"
           inputMode="numeric"
           maxLength={7}
@@ -179,12 +179,12 @@ const RegisterForm = () => {
 
         <InputGroup
           id="birth"
-          label="Data de Nascimento"
+          label="Data de nascimento"
           type="date"
           registration={register('birth')}
           error={errors.birth?.message}
           disabled={isLoading}
-          className="dark:scheme-dark"
+          className="h-11 dark:scheme-dark"
         />
       </div>
 
@@ -205,7 +205,7 @@ const RegisterForm = () => {
               disabled={isLoading || loadingCursos}
             >
               <SelectTrigger
-                className={`w-full bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 h-10 text-sm ${
+                className={`w-full bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 !h-11 text-sm ${
                   errors.curso
                     ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                     : ''
@@ -250,7 +250,7 @@ const RegisterForm = () => {
           to="/login"
           className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline font-medium"
         >
-          Faça Login
+          Faça login
         </Link>
       </div>
     </form>

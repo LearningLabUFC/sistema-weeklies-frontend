@@ -34,7 +34,7 @@ export function AlertSection({ alertStudents }: AlertSectionProps) {
           variant="outline"
           className="bg-red-200/50 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-300 dark:border-red-800 text-xs"
         >
-          Ação Necessária
+          Ação necessária
         </Badge>
       </CardHeader>
 

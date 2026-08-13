@@ -58,7 +58,7 @@ const PresenceForm = ({ isPresenceActive, onSuccess }: PresenceFormProps) => {
             <Key className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-50">
-            Confirmar Presença
+            Confirmar presença
           </h2>
         </div>
 
@@ -101,7 +101,7 @@ const PresenceForm = ({ isPresenceActive, onSuccess }: PresenceFormProps) => {
             disabled={!isPresenceActive || isLoading}
             className="w-full h-11 sm:h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Confirmando...' : 'Confirmar Presença'}
+            {isLoading ? 'Confirmando...' : 'Confirmar presença'}
           </Button>
         </form>
       </CardContent>

@@ -134,8 +134,8 @@ describe('AppSidebar Component', () => {
 
     expect(screen.getByText('Administrador')).toBeInTheDocument();
 
-    expect(screen.getByText('Gerenciar Admins')).toBeInTheDocument();
-    expect(screen.getByText('Gerenciar Presença')).toBeInTheDocument();
+    expect(screen.getByText('Gerenciar admins')).toBeInTheDocument();
+    expect(screen.getByText('Gerenciar presença')).toBeInTheDocument();
   });
 
   it('deve renderizar os links e a badge de Líder corretamente', () => {
@@ -154,9 +154,9 @@ describe('AppSidebar Component', () => {
     expect(screen.getByText('Líder')).toBeInTheDocument();
 
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Meu Projeto')).toBeInTheDocument();
+    expect(screen.getByText('Meu projeto')).toBeInTheDocument();
 
-    expect(screen.queryByText('Gerenciar Admins')).not.toBeInTheDocument();
+    expect(screen.queryByText('Gerenciar admins')).not.toBeInTheDocument();
   });
 
   it('deve chamar o AlertDialog de confirmação ao clicar no botão "Sair"', () => {

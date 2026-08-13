@@ -15,7 +15,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen px-4 sm:px-6 bg-linear-to-br from-indigo-100 via-white to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-center font-sans text-slate-900 dark:text-slate-50 transition-colors">
       {!isSuccess && (
         <HeaderLogo
-          title="Recuperar Senha"
+          title="Recuperar senha"
           subtitle="Digite seu email abaixo e enviaremos instruções para redefinir sua senha."
         />
       )}
@@ -38,7 +38,7 @@ const ForgotPassword = () => {
                 onClick={() => navigate('/login')}
                 className="w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white h-11 sm:h-12 rounded-lg text-sm sm:text-base transition-colors"
               >
-                Voltar para o Login
+                Voltar para o login
               </Button>
             </div>
           ) : (

@@ -136,7 +136,7 @@ describe('RegisterForm Component', () => {
       expect(mockShowAlertDialog).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'error',
-          title: 'Erro no Cadastro',
+          title: 'Erro no cadastro',
           message: 'E-mail já cadastrado no sistema',
         }),
       );

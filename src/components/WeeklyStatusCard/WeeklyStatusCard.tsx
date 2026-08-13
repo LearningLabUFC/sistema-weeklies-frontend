@@ -25,7 +25,7 @@ export function WeeklyStatusCard({
           </div>
           <div>
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Status de Weeklies
+              Status de weeklies
             </CardTitle>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Acompanhamento de envios da semana atual

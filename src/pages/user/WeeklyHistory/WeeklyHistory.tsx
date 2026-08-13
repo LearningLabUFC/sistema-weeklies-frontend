@@ -31,7 +31,7 @@ const WeeklyHistory = () => {
   return (
     <div className="w-full max-w-3xl mx-auto px-4 sm:px-0 py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Header
-        title="Minhas Weeklies"
+        title="Minhas weeklies"
         subtitle="Histórico de relatórios semanais"
       />
 
