@@ -16,6 +16,7 @@ import { ThemeToggle } from '@/components/ThemeToggle/ThemeToggle';
 import InputGroup from '@/components/InputGroup/InputGroup';
 import { images } from '@/assets/images';
 import Header from '@/components/Header/Header';
+import { ROLE_LABELS } from '@/data/data';
 
 interface UserProfile {
   id: string;
@@ -29,6 +30,7 @@ interface UserProfile {
   curso_id: string;
   status_id: string;
   global_role: string;
+  setores: string[];
 }
 
 interface UpdateProfilePayload {
@@ -58,8 +60,6 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const userSectors = ['Midias', 'LabUX', 'LLGirls'];
 
   const {
     register,
@@ -154,12 +154,7 @@ const Profile = () => {
     );
   }
 
-  const roleLabel =
-    profileData.global_role === 'admin'
-      ? 'Administrador'
-      : profileData.global_role === 'leader'
-        ? 'Líder'
-        : 'Aluno';
+  const roleLabel = ROLE_LABELS[profileData.global_role] || 'Aluno';
 
   return (
     <div className="w-full max-w-3xl mx-auto py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -198,7 +193,7 @@ const Profile = () => {
                     >
                       {roleLabel}
                     </Badge>
-                    {userSectors.map(sector => (
+                    {profileData?.setores?.map(sector => (
                       <Badge
                         key={sector}
                         variant="secondary"
