@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -20,16 +21,29 @@ import InputGroup from '@/components/InputGroup/InputGroup';
 import { api } from '@/lib/api';
 import { formatName } from '@/utils/formatName';
 
+interface FastAPIValidationError {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+}
+
 interface Curso {
   id: string;
   nome: string;
   ativo: boolean;
 }
 
+// 1. Adicionadas validações de Regex para a senha no Zod
 const registerSchema = z.object({
   fullName: z.string().min(3, 'O nome completo é obrigatório'),
   email: z.email('Digite um endereço de email válido'),
-  password: z.string().min(8, 'A senha deve conter no mínimo 8 caracteres'),
+  password: z
+    .string()
+    .min(8, 'Mínimo de 8 caracteres')
+    .regex(/[A-Z]/, 'Deve conter pelo menos uma letra maiúscula')
+    .regex(/[a-z]/, 'Deve conter pelo menos uma letra minúscula')
+    .regex(/[0-9]/, 'Deve conter pelo menos um número')
+    .regex(/[^A-Za-z0-9]/, 'Deve conter pelo menos um caractere especial'),
   matricula: z.string().min(6, 'A matrícula deve ter no mínimo 6 dígitos'),
   birth: z.string().min(1, 'A data de nascimento é obrigatória'),
   curso: z
@@ -66,22 +80,13 @@ const RegisterForm = () => {
       try {
         const response = await api.get<Curso[]>('/domain/cursos');
         const cursosAtivos = response.data.filter(curso => curso.ativo);
-
         setCursos(cursosAtivos);
-      } catch (error) {
-        if (error instanceof Error) {
-          showAlertDialog({
-            type: 'error',
-            title: 'Erro de carregamento',
-            message: 'Não foi possível carregar a lista de cursos.',
-          });
-        } else {
-          showAlertDialog({
-            type: 'error',
-            title: 'Erro inesperado',
-            message: 'Ocorreu um erro inesperado ao carregar os cursos.',
-          });
-        }
+      } catch {
+        showAlertDialog({
+          type: 'error',
+          title: 'Erro de carregamento',
+          message: 'Não foi possível carregar a lista de cursos.',
+        });
       } finally {
         setLoadingCursos(false);
       }
@@ -103,8 +108,49 @@ const RegisterForm = () => {
         metas_horas_semanais: 12,
       });
       navigate('/', { replace: true });
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error) {
+        const axiosError = error.cause as AxiosError<{
+          detail: FastAPIValidationError[];
+        }>;
+
+        if (
+          axiosError?.response?.data?.detail &&
+          Array.isArray(axiosError.response.data.detail)
+        ) {
+          const backendErrors = axiosError.response.data.detail;
+          let mappedFieldError = false;
+
+          backendErrors.forEach(err => {
+            const backendField = String(err.loc[err.loc.length - 1]);
+            const errorMessage = err.msg.replace('Value error, ', '');
+
+            const fieldMap: Record<string, keyof RegisterFormValues> = {
+              senha: 'password',
+              nome_completo: 'fullName',
+              email: 'email',
+              matricula: 'matricula',
+              data_nascimento: 'birth',
+              curso_id: 'curso',
+            };
+
+            const formField = fieldMap[backendField];
+
+            if (formField) {
+              setError(formField, {
+                type: 'server',
+                message: errorMessage,
+              });
+              mappedFieldError = true;
+            }
+          });
+
+          if (mappedFieldError) {
+            setIsLoading(false);
+            return;
+          }
+        }
+
         if (error.message.toLowerCase().includes('matrícula')) {
           setError('matricula', {
             type: 'manual',
@@ -151,15 +197,24 @@ const RegisterForm = () => {
         disabled={isLoading}
       />
 
-      <InputGroup
-        id="password"
-        label="Senha"
-        type="password"
-        placeholder="••••••••"
-        registration={register('password')}
-        error={errors.password?.message}
-        disabled={isLoading}
-      />
+      <div className="space-y-1">
+        <InputGroup
+          id="password"
+          label="Senha"
+          type="password"
+          placeholder="••••••••"
+          registration={register('password')}
+          error={errors.password?.message}
+          disabled={isLoading}
+        />
+        <div className="pl-1 pt-1">
+          <ul className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 list-disc list-inside space-y-0.5">
+            <li>Mínimo de 8 caracteres</li>
+            <li>Letras maiúsculas e minúsculas</li>
+            <li>Pelo menos um número e caractere especial (ex: !@#$%)</li>
+          </ul>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <InputGroup
@@ -205,7 +260,7 @@ const RegisterForm = () => {
               disabled={isLoading || loadingCursos}
             >
               <SelectTrigger
-                className={`w-full bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 !h-11 text-sm ${
+                className={`w-full bg-slate-100 dark:bg-slate-900 focus-visible:ring-indigo-600 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-slate-950 h-11! text-sm ${
                   errors.curso
                     ? 'ring-2 ring-red-500 focus-visible:ring-red-500'
                     : ''

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import RegisterForm from '../RegisterForm';
 import { useAuth } from '@/context/AuthContext';
@@ -59,7 +59,7 @@ describe('RegisterForm Component', () => {
   };
 
   it('deve exibir erros de validação ao enviar um formulário vazio', async () => {
-    renderComponent();
+    await renderComponent();
 
     fireEvent.click(screen.getByRole('button', { name: /registrar/i }));
 
@@ -70,9 +70,9 @@ describe('RegisterForm Component', () => {
       expect(
         screen.getByText('Digite um endereço de email válido'),
       ).toBeInTheDocument();
-      expect(
-        screen.getByText('A senha deve conter no mínimo 8 caracteres'),
-      ).toBeInTheDocument();
+
+      expect(screen.getAllByText('Mínimo de 8 caracteres')).toHaveLength(2);
+
       expect(
         screen.getByText('A matrícula deve ter no mínimo 6 dígitos'),
       ).toBeInTheDocument();
@@ -107,8 +107,9 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'fulano@teste.com' },
     });
+    // Atualizado com maiúscula e caractere especial para passar pelo Regex do Zod
     fireEvent.change(screen.getByLabelText(/senha/i), {
-      target: { value: 'senhaSegura123' },
+      target: { value: 'SenhaSegura123!' },
     });
     fireEvent.input(screen.getByLabelText(/número da matrícula/i), {
       target: { value: '123456' },
@@ -156,8 +157,9 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'fulano@teste.com' },
     });
+    // Atualizado com maiúscula e caractere especial para passar pelo Regex do Zod
     fireEvent.change(screen.getByLabelText(/senha/i), {
-      target: { value: 'senhaSegura123' },
+      target: { value: 'SenhaSegura123!' },
     });
     fireEvent.input(screen.getByLabelText(/número da matrícula/i), {
       target: { value: '123456' },
