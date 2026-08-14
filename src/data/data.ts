@@ -59,6 +59,10 @@ export const adminLinks: NavigationLink[] = [
     icon: Clock,
     label: 'Relatório de horas',
   },
+];
+
+export const superAdminLinks: NavigationLink[] = [
+  ...adminLinks,
   {
     to: '/admin/gerenciar-admins',
     icon: ShieldAlert,
@@ -88,3 +92,17 @@ export const pendingApprovalLinks = [
     icon: Link2,
   },
 ];
+
+export const ROLE_IDS = {
+  ALUNO: '2fa85f64-5717-4562-b3fc-2c963f66afa3',
+  ADMIN: '2fa85f64-5717-4562-b3fc-2c963f66afa2',
+  SUPER_ADMIN: '2fa85f64-5717-4562-b3fc-2c963f66afa1',
+  LEADER: 'id-do-lider-pendente',
+};
+
+export const ROLE_LABELS: Record<string, string> = {
+  [ROLE_IDS.ALUNO]: 'Aluno',
+  [ROLE_IDS.ADMIN]: 'Administrador',
+  [ROLE_IDS.SUPER_ADMIN]: 'Coordenadora',
+  [ROLE_IDS.LEADER]: 'Líder',
+};
