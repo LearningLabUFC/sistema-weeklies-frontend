@@ -6,6 +6,7 @@ import AppSidebar from '../AppSidebar';
 
 import { useAuth } from '@/context/AuthContext';
 import { useAlertDialog } from '@/context/AlertDialogContext';
+import { ROLE_IDS } from '@/data/data';
 import type { User } from '@/types/user';
 
 vi.mock('@/context/AuthContext', () => ({
@@ -73,7 +74,7 @@ describe('AppSidebar Component', () => {
     foto_perfil: 'avatar_padrao.png',
     curso_id: 'curso-123',
     status_id: 'ativo',
-    global_role: 'aluno',
+    global_role: ROLE_IDS.ALUNO,
   };
 
   beforeEach(() => {
@@ -121,7 +122,7 @@ describe('AppSidebar Component', () => {
 
   it('deve renderizar os links e a badge de Administrador corretamente', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { ...mockBaseUser, global_role: 'admin' },
+      user: { ...mockBaseUser, global_role: ROLE_IDS.ADMIN },
       isAuthenticated: true,
       logout: mockLogout,
       login: vi.fn(),
@@ -134,13 +135,14 @@ describe('AppSidebar Component', () => {
 
     expect(screen.getByText('Administrador')).toBeInTheDocument();
 
-    expect(screen.getByText('Gerenciar admins')).toBeInTheDocument();
+    expect(screen.getByText('Solicitações')).toBeInTheDocument();
+    expect(screen.getByText('Projetos')).toBeInTheDocument();
     expect(screen.getByText('Gerenciar presença')).toBeInTheDocument();
   });
 
   it('deve renderizar os links e a badge de Líder corretamente', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { ...mockBaseUser, global_role: 'leader' },
+      user: { ...mockBaseUser, global_role: ROLE_IDS.LEADER },
       isAuthenticated: true,
       logout: mockLogout,
       login: vi.fn(),
@@ -161,7 +163,7 @@ describe('AppSidebar Component', () => {
 
   it('deve chamar o AlertDialog de confirmação ao clicar no botão "Sair"', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { ...mockBaseUser, global_role: 'aluno' },
+      user: { ...mockBaseUser, global_role: ROLE_IDS.ALUNO },
       isAuthenticated: true,
       logout: mockLogout,
       login: vi.fn(),
