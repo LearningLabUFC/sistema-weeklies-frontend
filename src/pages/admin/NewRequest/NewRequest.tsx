@@ -64,7 +64,7 @@ const NewRequest = () => {
     status: 'ativo' | 'inativo',
   ) => {
     try {
-      await api.patch(`/admin/users/${id}/status?novo_status=${status}`);
+      await api.patch(`/admin/users/${id}/status`, { novo_status: status });
       setRequests(prev => prev.filter(r => r.id !== id));
     } catch {
       showAlertDialog({
@@ -80,7 +80,9 @@ const NewRequest = () => {
       setIsProcessingAll(true);
 
       const promises = requests.map(request =>
-        api.patch(`/admin/users/${request.id}/status?novo_status=ativo`),
+        api.patch(`/admin/users/${request.id}/status`, {
+          novo_status: 'ativo',
+        }),
       );
 
       await Promise.all(promises);
