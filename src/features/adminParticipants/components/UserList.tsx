@@ -1,10 +1,19 @@
-import { AlertTriangle, CheckCircle2, Loader2, Search } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  MoreVertical,
+  Search,
+} from 'lucide-react';
+import { useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ROLE_DISPLAY_NAMES, ROLE_NAME_COLORS } from '@/config/roles';
 import type { Usuario } from '@/pages/admin/Participants/Participants';
-import { UserDetailsModal } from '../UserDetailsModal/UserDetailsModal';
+import { getInitials } from '@/utils/formatName';
+
+import { UserDetailsModal } from './UserDetailsModal';
 
 interface UserListProps {
   usuarios: Usuario[];
@@ -13,18 +22,7 @@ interface UserListProps {
   limite: number;
   total: number;
   setPagina: React.Dispatch<React.SetStateAction<number>>;
-  // Adicionei um onUpdate aqui para repassar até o Participants.tsx se quiser,
-  // ou você pode dar reload/re-fetch direto.
   onUpdate?: () => void;
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 export function UserList({
@@ -34,7 +32,7 @@ export function UserList({
   limite,
   total,
   setPagina,
-  onUpdate = () => window.location.reload(), // Fallback simples para recarregar se a prop não for passada
+  onUpdate = () => window.location.reload(),
 }: UserListProps) {
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
 
@@ -160,13 +158,12 @@ export function UserList({
         </div>
       )}
 
-      {/* Uso do novo componente Modal Separado */}
       <UserDetailsModal
         user={selectedUser}
         onClose={() => setSelectedUser(null)}
         onUpdate={() => {
           setSelectedUser(null);
-          onUpdate(); // Chama a função pra dar fetch novamente na lista pai
+          onUpdate();
         }}
       />
     </>

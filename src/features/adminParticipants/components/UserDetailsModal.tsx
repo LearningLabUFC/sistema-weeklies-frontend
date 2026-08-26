@@ -1,18 +1,17 @@
-import { useState } from 'react';
-import { ROLE_IDS } from '@/data/data';
 import {
-  X,
-  Trash2,
-  ShieldAlert,
   Calendar,
-  Mail,
   GraduationCap,
+  Mail,
   Shield,
+  ShieldAlert,
+  Trash2,
+  X,
 } from 'lucide-react';
+import { useState } from 'react';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -20,41 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { ROLE_DISPLAY_NAMES, ROLE_IDS, ROLE_NAME_COLORS } from '@/config/roles';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api';
 import type { Usuario } from '@/pages/admin/Participants/Participants';
-import { useAlertDialog } from '@/context/AlertDialogContext';
-
-// Importação do seu hook de autenticação real
-import { useAuth } from '@/context/AuthContext';
+import { getInitials } from '@/utils/formatName';
 
 interface UserDetailsModalProps {
   user: Usuario | null;
   onClose: () => void;
   onUpdate: () => void;
 }
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-const getRoleStyle = (role: string) => {
-  const styles: Record<string, string> = {
-    aluno: 'bg-[#457EFF]/10 text-[#457EFF] border-[#457EFF]/20',
-    admin: 'bg-[#8204EE]/10 text-[#8204EE] border-[#8204EE]/20',
-    super_admin: 'bg-[#F51BA3]/10 text-[#F51BA3] border-[#F51BA3]/20',
-    leader:
-      'bg-[#FFBF00]/10 text-[#D49E00] border-[#FFBF00]/20 dark:text-[#FFBF00]',
-  };
-  return (
-    styles[role.toLowerCase()] ||
-    'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-  );
-};
 
 export function UserDetailsModal({
   user,
@@ -208,9 +185,15 @@ export function UserDetailsModal({
               </h4>
               <Badge
                 variant="outline"
-                className={`mt-2 px-3 py-1 text-sm border ${getRoleStyle(user.role_nome)}`}
+                className={`text-xs py-0.5 border ${
+                  ROLE_NAME_COLORS[user.role_nome.toLowerCase()] ||
+                  'bg-slate-100 text-slate-600'
+                }`}
               >
-                {user.role_nome.toUpperCase()}
+                {(
+                  ROLE_DISPLAY_NAMES[user.role_nome.toLowerCase()] ||
+                  user.role_nome
+                ).toUpperCase()}
               </Badge>
             </div>
           </div>
