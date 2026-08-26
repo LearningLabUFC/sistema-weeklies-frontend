@@ -1,8 +1,8 @@
 import { useSearchParams, Navigate } from 'react-router-dom';
 
-import HeaderLogo from '@/components/HeaderLogo/HeaderLogo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { VerifyCodeForm } from '@/components/forms/VerifyCodeForm';
+import HeaderLogo from '@/components/shared/HeaderLogo/HeaderLogo';
+import { VerifyCodeForm } from '@/features/auth/components/forms/VerifyCodeForm';
 
 const VerifyCode = () => {
   const [searchParams] = useSearchParams();

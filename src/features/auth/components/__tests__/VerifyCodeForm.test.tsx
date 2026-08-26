@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import { VerifyCodeForm } from '../VerifyCodeForm';
+import { VerifyCodeForm } from '../forms/VerifyCodeForm';
 import { useAlertDialog } from '@/context/AlertDialogContext';
 
 vi.mock('@/context/AlertDialogContext', () => ({

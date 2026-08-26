@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-import HeaderLogo from '@/components/HeaderLogo/HeaderLogo';
-import LoginForm from '@/components/forms/LoginForm';
+import HeaderLogo from '@/components/shared/HeaderLogo/HeaderLogo';
+import LoginForm from '@/features/auth/components/forms/LoginForm';
 
 const Login = () => {
   return (

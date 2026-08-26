@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
+
+import { useAuth } from '@/context/AuthContext';
+import { useAlertDialog } from '@/context/AlertDialogContext';
+
+import { api } from '@/lib/api';
+import { formatName } from '@/utils/formatName';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -14,12 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-import { useAuth } from '@/context/AuthContext';
-import { useAlertDialog } from '@/context/AlertDialogContext';
-import InputGroup from '@/components/InputGroup/InputGroup';
-import { api } from '@/lib/api';
-import { formatName } from '@/utils/formatName';
+import InputGroup from '@/components/shared/InputGroup/InputGroup';
 
 interface FastAPIValidationError {
   loc: (string | number)[];
@@ -33,7 +34,6 @@ interface Curso {
   ativo: boolean;
 }
 
-// 1. Adicionadas validações de Regex para a senha no Zod
 const registerSchema = z.object({
   fullName: z.string().min(3, 'O nome completo é obrigatório'),
   email: z.email('Digite um endereço de email válido'),

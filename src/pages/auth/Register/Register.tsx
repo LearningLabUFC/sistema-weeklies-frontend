@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
-import HeaderLogo from '@/components/HeaderLogo/HeaderLogo';
-import RegisterForm from '@/components/forms/RegisterForm';
+
+import HeaderLogo from '@/components/shared/HeaderLogo/HeaderLogo';
+import RegisterForm from '@/features/auth/components/forms/RegisterForm';
 
 const Register = () => {
   return (

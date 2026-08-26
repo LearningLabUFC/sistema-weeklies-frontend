@@ -5,11 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AxiosError } from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 
+import { useAlertDialog } from '@/context/AlertDialogContext';
+import { api } from '@/lib/api';
+
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useAlertDialog } from '@/context/AlertDialogContext';
-import { api } from '@/lib/api';
 
 const resetSchema = z
   .object({

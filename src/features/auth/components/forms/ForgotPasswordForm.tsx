@@ -6,10 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AxiosError } from 'axios';
 
-import InputGroup from '@/components/InputGroup/InputGroup';
-import { Button } from '@/components/ui/button';
-import { useAlertDialog } from '@/context/AlertDialogContext';
 import { api } from '@/lib/api';
+import { useAlertDialog } from '@/context/AlertDialogContext';
+
+import { Button } from '@/components/ui/button';
+import InputGroup from '@/components/shared/InputGroup/InputGroup';
 
 const forgotPasswordSchema = z.object({
   email: z.email('Digite um endereço de email válido'),

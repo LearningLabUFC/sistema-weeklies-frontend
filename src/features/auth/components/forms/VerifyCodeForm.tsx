@@ -8,9 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { ArrowLeft } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { useAlertDialog } from '@/context/AlertDialogContext';
 import { api } from '@/lib/api';
+
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface VerifyCodeFormProps {

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import RegisterForm from '../RegisterForm';
+import RegisterForm from '../forms/RegisterForm';
 import { useAuth } from '@/context/AuthContext';
 import { useAlertDialog } from '@/context/AlertDialogContext';
 import { api } from '@/lib/api';

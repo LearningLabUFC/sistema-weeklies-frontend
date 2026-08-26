@@ -4,10 +4,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useAlertDialog } from '@/context/AlertDialogContext';
-import InputGroup from '@/components/InputGroup/InputGroup';
+
+import { Button } from '@/components/ui/button';
+import InputGroup from '@/components/shared/InputGroup/InputGroup';
 
 const loginSchema = z.object({
   email: z

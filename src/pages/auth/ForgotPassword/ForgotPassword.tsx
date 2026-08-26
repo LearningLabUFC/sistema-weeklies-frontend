@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 
-import HeaderLogo from '@/components/HeaderLogo/HeaderLogo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import ForgotPasswordForm from '@/components/forms/ForgotPasswordForm';
+
+import HeaderLogo from '@/components/shared/HeaderLogo/HeaderLogo';
+import ForgotPasswordForm from '@/features/auth/components/forms/ForgotPasswordForm';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();

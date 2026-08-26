@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 
-import HeaderLogo from '@/components/HeaderLogo/HeaderLogo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ResetPasswordForm } from '@/components/forms/ResetPasswordForm';
+import HeaderLogo from '@/components/shared/HeaderLogo/HeaderLogo';
+import { ResetPasswordForm } from '@/features/auth/components/forms/ResetPasswordForm';
 
 const ResetPassword = () => {
   const location = useLocation();
