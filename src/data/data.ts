@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   Link2,
   PlaySquare,
-  ShieldAlert,
   ShieldCheck,
   User,
   Users,
@@ -61,14 +60,7 @@ export const adminLinks: NavigationLink[] = [
   },
 ];
 
-export const superAdminLinks: NavigationLink[] = [
-  ...adminLinks,
-  {
-    to: '/admin/gerenciar-admins',
-    icon: ShieldAlert,
-    label: 'Gerenciar admins',
-  },
-];
+export const superAdminLinks: NavigationLink[] = [...adminLinks];
 
 export const pendingApprovalLinks = [
   {
