@@ -19,5 +19,5 @@ export interface RegisterData {
   data_nascimento: string;
   matricula: string;
   curso_id: string;
-  metas_horas_semanais: number;
+  meta_horas_semanais: number;
 }

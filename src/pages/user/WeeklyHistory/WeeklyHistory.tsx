@@ -1,16 +1,17 @@
+import { FileText } from 'lucide-react';
 import { useState } from 'react';
-import EmptyWeeklies from '@/components/EmptyWeeklies/EmptyWeeklies';
-import Header from '@/components/Header/Header';
-import type { Weekly } from '@/types/weeklies';
-import { mockWeeklies } from '@/data/weeklies';
 
-import { WeeklyCard } from '@/components/WeeklyCard/WeeklyCard';
-import { WeeklyPagination } from '@/components/WeeklyPagination/WeeklyPagination';
+import Header from '@/components/layout/Header/Header';
+import EmptyState from '@/components/shared/EmptyState/EmptyState';
+import { WeeklyPagination } from '@/features/weeklies/components/Pagination';
+import { WeeklyCard } from '@/features/weeklies/components/WeeklyCard';
+import { MOCK_WEEKLIES } from '@/mock/weeklies';
+import type { Weekly } from '@/types/weeklies';
 
 const ITEMS_PER_PAGE = 3;
 
 const WeeklyHistory = () => {
-  const [weeklies] = useState<Weekly[]>(mockWeeklies);
+  const [weeklies] = useState<Weekly[]>(MOCK_WEEKLIES);
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(weeklies.length / ITEMS_PER_PAGE);
@@ -54,7 +55,11 @@ const WeeklyHistory = () => {
           />
         </>
       ) : (
-        <EmptyWeeklies />
+        <EmptyState
+          icon={FileText}
+          title="Nenhuma weekly registrada"
+          description="Comece criando sua primeira weekly no Dashboard"
+        />
       )}
     </div>
   );

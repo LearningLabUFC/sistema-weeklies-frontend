@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext } from 'react';
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
 
@@ -21,13 +21,3 @@ export interface AlertDialogContextType {
 export const AlertDialogContext = createContext<
   AlertDialogContextType | undefined
 >(undefined);
-
-export const useAlertDialog = () => {
-  const context = useContext(AlertDialogContext);
-  if (!context) {
-    throw new Error(
-      'useAlertDialog deve ser usado dentro de um AlertDialogProvider',
-    );
-  }
-  return context;
-};

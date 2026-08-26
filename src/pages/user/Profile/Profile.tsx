@@ -1,22 +1,21 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { isAxiosError } from 'axios';
+import { CalendarDays, Clock, Mail, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { api } from '@/lib/api';
-import { isAxiosError } from 'axios';
-import { useAlertDialog } from '@/context/AlertDialogContext';
 
-import { Card, CardContent } from '@/components/ui/card';
+import Header from '@/components/layout/Header/Header';
+import InputGroup from '@/components/shared/InputGroup/InputGroup';
+import { ThemeToggle } from '@/components/shared/ThemeToggle/ThemeToggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CalendarDays, Clock, Mail, Pencil } from 'lucide-react';
-
-import { ThemeToggle } from '@/components/ThemeToggle/ThemeToggle';
-import InputGroup from '@/components/InputGroup/InputGroup';
-import { images } from '@/assets/images';
-import Header from '@/components/Header/Header';
-import { ROLE_LABELS } from '@/data/data';
+import { images } from '@/config/images';
+import { ROLE_LABELS } from '@/config/roles';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { api } from '@/lib/api';
 
 interface UserProfile {
   id: string;

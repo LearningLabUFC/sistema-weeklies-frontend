@@ -1,11 +1,11 @@
+import { Check } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
 
-import HeaderLogo from '@/components/HeaderLogo/HeaderLogo';
-import { Card, CardContent } from '@/components/ui/card';
+import Brand from '@/components/shared/Brand/Brand';
 import { Button } from '@/components/ui/button';
-import ForgotPasswordForm from '@/components/forms/ForgotPasswordForm';
+import { Card, CardContent } from '@/components/ui/card';
+import ForgotPasswordForm from '@/features/auth/components/forms/ForgotPasswordForm';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen px-4 sm:px-6 bg-linear-to-br from-indigo-100 via-white to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-center font-sans text-slate-900 dark:text-slate-50 transition-colors">
       {!isSuccess && (
-        <HeaderLogo
+        <Brand
           title="Recuperar senha"
           subtitle="Digite seu email abaixo e enviaremos instruções para redefinir sua senha."
         />

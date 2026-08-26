@@ -1,7 +1,8 @@
-import { motion } from 'motion/react';
 import { Home } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Link } from 'react-router';
-import { AnimatedRobot } from '@/components/AnimatedRobot/AnimatedRobot';
+
+import { AnimatedRobot } from '@/components/shared/AnimatedRobot/AnimatedRobot';
 
 export function NotFound() {
   return (

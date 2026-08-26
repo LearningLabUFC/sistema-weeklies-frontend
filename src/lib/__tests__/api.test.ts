@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { type InternalAxiosRequestConfig } from 'axios';
-import { api } from '../api';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { api } from '@/lib/api';
 
 interface AxiosInterceptorHandlers {
   handlers: Array<{

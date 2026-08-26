@@ -1,12 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getNavigationLinks, getRoleDetails } from '../navigationLinks';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   adminLinks,
-  superAdminLinks,
   leaderLinks,
+  superAdminLinks,
   userLinks,
-  ROLE_IDS,
-} from '@/data/data';
+} from '@/config/navigation';
+import { ROLE_IDS } from '@/config/roles';
+import { getNavigationLinks, getRoleDetails } from '@/utils/navigationLinks';
 
 describe('navigationLinks utility', () => {
   describe('getNavigationLinks', () => {

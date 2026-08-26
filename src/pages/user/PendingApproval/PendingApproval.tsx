@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import { Clock, LogOut } from 'lucide-react';
+import { useEffect } from 'react';
 
-import { pendingApprovalLinks } from '@/data/data';
-
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { pendingApprovalLinks } from '@/config/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function PendingApproval() {
   const { logout, checkUserStatus } = useAuth();
@@ -20,7 +19,6 @@ export default function PendingApproval() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
       <div className="bg-white dark:bg-slate-900 max-w-md w-full rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6">
-        {/* Cabeçalho */}
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="h-16 w-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-1">
             <Clock className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
@@ -40,7 +38,6 @@ export default function PendingApproval() {
           </div>
         </div>
 
-        {/* Seção de Links */}
         <div className="space-y-3 pt-4">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-200 px-1">
             Enquanto você aguarda, conheça mais:
@@ -68,7 +65,6 @@ export default function PendingApproval() {
           </div>
         </div>
 
-        {/* Rodapé / Botão de Sair */}
         <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
           <Button
             onClick={logout}
