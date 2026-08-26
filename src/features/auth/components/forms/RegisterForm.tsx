@@ -103,7 +103,7 @@ const RegisterForm = () => {
         matricula: data.matricula,
         data_nascimento: data.birth,
         curso_id: data.curso,
-        metas_horas_semanais: 12,
+        meta_horas_semanais: 12,
       });
       navigate('/', { replace: true });
     } catch (error: unknown) {
