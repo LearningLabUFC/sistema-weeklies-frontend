@@ -1,16 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AxiosError } from 'axios';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 
-import { useAuth } from '@/context/AuthContext';
-import { useAlertDialog } from '@/context/AlertDialogContext';
-
-import { api } from '@/lib/api';
-import { formatName } from '@/utils/formatName';
-
+import InputGroup from '@/components/shared/InputGroup/InputGroup';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -20,7 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import InputGroup from '@/components/shared/InputGroup/InputGroup';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
+import { formatName } from '@/utils/formatName';
 
 interface FastAPIValidationError {
   loc: (string | number)[];

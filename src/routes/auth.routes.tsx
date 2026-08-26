@@ -1,10 +1,10 @@
 import { type RouteObject } from 'react-router-dom';
 
+import ForgotPassword from '@/pages/auth/ForgotPassword/ForgotPassword';
 import Login from '@/pages/auth/Login/Login';
 import Register from '@/pages/auth/Register/Register';
-import ForgotPassword from '@/pages/auth/ForgotPassword/ForgotPassword';
-import VerifyCode from '@/pages/auth/VerifyCode/VerifyCode';
 import ResetPassword from '@/pages/auth/ResetPassword/ResetPassword';
+import VerifyCode from '@/pages/auth/VerifyCode/VerifyCode';
 
 export const authRoutes: RouteObject[] = [
   {

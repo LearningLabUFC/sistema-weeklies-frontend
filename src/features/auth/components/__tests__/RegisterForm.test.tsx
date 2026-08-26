@@ -1,15 +1,16 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import RegisterForm from '../forms/RegisterForm';
-import { useAuth } from '@/context/AuthContext';
-import { useAlertDialog } from '@/context/AlertDialogContext';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import RegisterForm from '@/features/auth/components/forms/RegisterForm';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api';
 
-vi.mock('@/context/AuthContext', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
-vi.mock('@/context/AlertDialogContext', () => ({
+vi.mock('@/hooks/useAlertDialog', () => ({
   useAlertDialog: vi.fn(),
 }));
 vi.mock('@/lib/api', () => ({
@@ -107,7 +108,6 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'fulano@teste.com' },
     });
-    // Atualizado com maiúscula e caractere especial para passar pelo Regex do Zod
     fireEvent.change(screen.getByLabelText(/senha/i), {
       target: { value: 'SenhaSegura123!' },
     });
@@ -157,7 +157,6 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'fulano@teste.com' },
     });
-    // Atualizado com maiúscula e caractere especial para passar pelo Regex do Zod
     fireEvent.change(screen.getByLabelText(/senha/i), {
       target: { value: 'SenhaSegura123!' },
     });

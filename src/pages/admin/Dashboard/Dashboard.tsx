@@ -1,37 +1,33 @@
-import { useState } from 'react';
-import Header from '@/components/Header/Header';
-import { AlertSection } from '@/components/AlertSection/AlertSection';
-import { EngagementSummaryCard } from '@/components/EngagementSummaryCard/EngagementSummaryCard';
-import { ProjectsOverviewCard } from '@/components/ProjectsOverviewCard/ProjectsOverviewCard';
-import { StatsGrid } from '@/components/StatsGrid/StatsGrid';
-import { WeeklyStatusCard } from '@/components/WeeklyStatusCard/WeeklyStatusCard';
-
 import {
-  Users,
   AlertTriangle,
-  TrendingUp,
-  FolderKanban,
   CalendarCheck,
+  FolderKanban,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
+import { useState } from 'react';
 
-import {
-  MOCK_USERS,
-  MOCK_PROJECTS,
-  MOCK_PRESENCE_RECORDS,
-} from '@/data/mockData';
-
+import Header from '@/components/layout/Header/Header';
+import { AlertSection } from '@/features/dashboard/components/AlertSection';
+import { EngagementSummaryCard } from '@/features/dashboard/components/EngagementSummaryCard';
+import { ProjectsOverviewCard } from '@/features/dashboard/components/ProjectsOverviewCard';
+import { StatsGrid } from '@/features/dashboard/components/StatsGrid';
+import { WeeklyStatusCard } from '@/features/dashboard/components/WeeklyStatusCard';
+import { MOCK_PRESENCE_RECORDS } from '@/mock/presence';
+import { MOCK_SECTOR } from '@/mock/sectors';
+import { MOCK_USERS } from '@/mock/users';
 import type {
-  UserItem,
-  ProjectItem,
   PresenceItem,
+  ProjectItem,
   StatCardProps,
+  UserItem,
 } from '@/types/dashboard';
 
 export function Dashboard() {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   const usersList: UserItem[] = (MOCK_USERS || []) as UserItem[];
-  const projectsList: ProjectItem[] = (MOCK_PROJECTS || []) as ProjectItem[];
+  const projectsList: ProjectItem[] = (MOCK_SECTOR || []) as ProjectItem[];
   const presenceList: PresenceItem[] = (MOCK_PRESENCE_RECORDS ||
     []) as PresenceItem[];
 

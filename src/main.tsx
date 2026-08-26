@@ -1,12 +1,12 @@
+import './index.css';
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
-import { router } from './routes/index.tsx';
-import { AlertDialogProvider } from './hooks/useAlertDialog.tsx';
-import { AuthProvider } from './context/AuthContext.tsx';
-
-import './index.css';
+import { AlertDialogProvider } from '@/context/AlertDialogProvider';
+import { AuthProvider } from '@/features/auth/context/AuthProvider';
+import { router } from '@/routes/index';
 
 const savedTheme = localStorage.getItem('theme');
 const systemPrefersDark = window.matchMedia(

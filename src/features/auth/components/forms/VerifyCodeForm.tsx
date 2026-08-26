@@ -1,18 +1,17 @@
-import {
-  useState,
-  useRef,
-  type KeyboardEvent,
-  type ClipboardEvent,
-} from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { ArrowLeft } from 'lucide-react';
-
-import { useAlertDialog } from '@/context/AlertDialogContext';
-import { api } from '@/lib/api';
+import {
+  type ClipboardEvent,
+  type KeyboardEvent,
+  useRef,
+  useState,
+} from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { api } from '@/lib/api';
 
 interface VerifyCodeFormProps {
   email: string;

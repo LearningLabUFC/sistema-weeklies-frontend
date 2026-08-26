@@ -1,10 +1,11 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { VerifyCodeForm } from '../forms/VerifyCodeForm';
-import { useAlertDialog } from '@/context/AlertDialogContext';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/context/AlertDialogContext', () => ({
+import { VerifyCodeForm } from '@/features/auth/components/forms/VerifyCodeForm';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+
+vi.mock('@/hooks/useAlertDialog', () => ({
   useAlertDialog: vi.fn(),
 }));
 

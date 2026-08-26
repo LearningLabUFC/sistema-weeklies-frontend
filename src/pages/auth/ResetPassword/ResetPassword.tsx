@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
+import { useState } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
-import { Card, CardContent } from '@/components/ui/card';
+import Brand from '@/components/shared/Brand/Brand';
 import { Button } from '@/components/ui/button';
-import HeaderLogo from '@/components/shared/HeaderLogo/HeaderLogo';
+import { Card, CardContent } from '@/components/ui/card';
 import { ResetPasswordForm } from '@/features/auth/components/forms/ResetPasswordForm';
 
 const ResetPassword = () => {
@@ -21,7 +21,7 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen px-4 sm:px-6 bg-linear-to-br from-indigo-100 via-white to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-center font-sans text-slate-900 dark:text-slate-50 transition-colors">
       {!isSuccess && (
-        <HeaderLogo
+        <Brand
           title="Nova Senha"
           subtitle="Crie uma nova senha para acessar sua conta."
         />

@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import Header from '@/components/Header/Header';
+import { useEffect, useState } from 'react';
+
+import Header from '@/components/layout/Header/Header';
+import { FilterBar } from '@/features/adminParticipants/components/FilterBar';
+import { StatsCards } from '@/features/adminParticipants/components/StatsCards';
+import { UserList } from '@/features/adminParticipants/components/UserList';
 import { api } from '@/lib/api';
-import { StatsCards } from '@/components/StatsCards/StatsCards';
-import { FilterBar } from '@/components/FilterBar/FilterBar';
-import { UserList } from '@/components/UserList/UserList';
 
 export interface Usuario {
   id: string;
@@ -52,52 +53,65 @@ export default function Participants() {
           api.get<ApiResponse>('/admin/users?status=ativo&limite=1'),
           api.get<ApiResponse>('/admin/users?status=inativo&limite=1'),
         ]);
-
         setGlobalStats({
           total: resTotal.data.total,
           ativos: resAtivos.data.total,
           inativos: resInativos.data.total,
         });
       } catch (error) {
-        console.error('Erro ao buscar estatísticas globais:', error);
+        console.error('Erro ao buscar estatísticas:', error);
       }
     };
 
     fetchGlobalStats();
   }, []);
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        pagina: pagina.toString(),
-        limite: limite.toString(),
-      });
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPagina(1);
+  };
 
-      if (searchTerm) params.append('busca', searchTerm);
-      if (selectedRole) params.append('role', selectedRole);
-      if (filterStatus !== 'todos') params.append('status', filterStatus);
+  const handleRoleChange = (value: string) => {
+    setSelectedRole(value);
+    setPagina(1);
+  };
 
-      const response = await api.get<ApiResponse>(
-        `/admin/users?${params.toString()}`,
-      );
-      setUsuarios(response.data.usuarios);
-      setTotalFiltrado(response.data.total);
-    } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [pagina, limite, searchTerm, selectedRole, filterStatus]);
+  const handleStatusChange = (value: 'todos' | 'ativo' | 'inativo') => {
+    setFilterStatus(value);
+    setPagina(1);
+  };
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          pagina: pagina.toString(),
+          limite: limite.toString(),
+        });
+
+        if (searchTerm) params.append('busca', searchTerm);
+        if (selectedRole) params.append('role', selectedRole);
+        if (filterStatus !== 'todos') params.append('status', filterStatus);
+
+        const response = await api.get<ApiResponse>(
+          `/admin/users?${params.toString()}`,
+        );
+        setUsuarios(response.data.usuarios);
+        setTotalFiltrado(response.data.total);
+      } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const timer = setTimeout(() => {
-      setPagina(1);
       fetchUsers();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, selectedRole, filterStatus, fetchUsers]);
+  }, [pagina, limite, searchTerm, selectedRole, filterStatus]);
 
   return (
     <div className="w-full max-w-5xl mx-auto py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -109,14 +123,14 @@ export default function Participants() {
       <StatsCards
         stats={globalStats}
         filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
+        setFilterStatus={handleStatusChange}
       />
 
       <FilterBar
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        setSearchTerm={handleSearchChange}
         selectedRole={selectedRole}
-        setSelectedRole={setSelectedRole}
+        setSelectedRole={handleRoleChange}
       />
 
       <UserList

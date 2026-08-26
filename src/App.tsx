@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router';
 
+import AppSidebar from '@/components/layout/Sidebar/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import AppSidebar from './components/Sidebar/AppSidebar';
 
 export default function App() {
   return (

@@ -1,10 +1,10 @@
 import { type RouteObject } from 'react-router-dom';
 
-import Profile from '@/pages/user/Profile/Profile';
 import Presence from '@/pages/user/Presence/Presence';
+import Profile from '@/pages/user/Profile/Profile';
+import TimeClock from '@/pages/user/TimeClock/TimeClock';
 import Weeklies from '@/pages/user/Weeklies/Weeklies';
 import WeeklyHistory from '@/pages/user/WeeklyHistory/WeeklyHistory';
-import TimeClock from '@/pages/user/TimeClock/TimeClock';
 
 export const userRoutes: RouteObject[] = [
   {

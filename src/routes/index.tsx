@@ -1,13 +1,13 @@
 import { createBrowserRouter } from 'react-router-dom';
+
 import App from '@/App';
-import { ProtectedRoute } from './ProtectedRoute';
 import { NotFound } from '@/pages/Not Found/NotFound';
 import PendingApproval from '@/pages/user/PendingApproval/PendingApproval';
-
-import { authRoutes } from './auth.routes';
-import { userRoutes } from './user.routes';
-import { leaderRoutes } from './leader.routes';
-import { adminRoutes } from './admin.routes';
+import { adminRoutes } from '@/routes/admin.routes';
+import { authRoutes } from '@/routes/auth.routes';
+import { leaderRoutes } from '@/routes/leader.routes';
+import { ProtectedRoute } from '@/routes/ProtectedRoute';
+import { userRoutes } from '@/routes/user.routes';
 
 export const router = createBrowserRouter([
   {

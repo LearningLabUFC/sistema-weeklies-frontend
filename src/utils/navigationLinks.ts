@@ -1,11 +1,10 @@
 import {
   adminLinks,
-  superAdminLinks,
   leaderLinks,
+  superAdminLinks,
   userLinks,
-  ROLE_IDS,
-  ROLE_LABELS,
-} from '@/data/data';
+} from '@/config/navigation';
+import { ROLE_IDS, ROLE_LABELS, ROLE_NAME_COLORS } from '@/config/roles';
 import type { NavigationLink } from '@/types/sidebar';
 
 export const getNavigationLinks = (role: string): NavigationLink[] => {
@@ -33,23 +32,22 @@ export const getRoleDetails = (role: string) => {
   const detailsMap: Record<string, { label: string; color: string }> = {
     [ROLE_IDS.SUPER_ADMIN]: {
       label: ROLE_LABELS[ROLE_IDS.SUPER_ADMIN],
-      color: 'bg-[#F51BA3]/10 text-[#F51BA3] dark:bg-[#F51BA3]/20',
+      color: ROLE_NAME_COLORS.super_admin,
     },
     [ROLE_IDS.ADMIN]: {
       label: ROLE_LABELS[ROLE_IDS.ADMIN],
-      color: 'bg-[#8204EE]/10 text-[#8204EE] dark:bg-[#8204EE]/20',
+      color: ROLE_NAME_COLORS.admin,
     },
     [ROLE_IDS.LEADER]: {
       label: ROLE_LABELS[ROLE_IDS.LEADER],
-      color:
-        'bg-[#FFBF00]/15 text-[#D49E00] dark:bg-[#FFBF00]/20 dark:text-[#FFBF00]',
+      color: ROLE_NAME_COLORS.lider,
     },
   };
 
   return (
     detailsMap[role] || {
       label: ROLE_LABELS[ROLE_IDS.ALUNO] || 'Aluno',
-      color: 'bg-[#457EFF]/10 text-[#457EFF] dark:bg-[#457EFF]/20',
+      color: ROLE_NAME_COLORS.aluno,
     }
   );
 };

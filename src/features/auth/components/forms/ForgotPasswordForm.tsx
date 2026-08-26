@@ -1,16 +1,15 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
+import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { AxiosError } from 'axios';
+import { z } from 'zod';
 
-import { api } from '@/lib/api';
-import { useAlertDialog } from '@/context/AlertDialogContext';
-
-import { Button } from '@/components/ui/button';
 import InputGroup from '@/components/shared/InputGroup/InputGroup';
+import { Button } from '@/components/ui/button';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { api } from '@/lib/api';
 
 const forgotPasswordSchema = z.object({
   email: z.email('Digite um endereço de email válido'),

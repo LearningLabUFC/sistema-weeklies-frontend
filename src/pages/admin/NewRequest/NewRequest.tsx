@@ -1,19 +1,17 @@
+import { CheckCircle2, Inbox } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import Header from '@/components/layout/Header/Header';
+import EmptyState from '@/components/shared/EmptyState/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import Header from '@/components/Header/Header';
-
-import { api } from '@/lib/api';
-import { useAlertDialog } from '@/context/AlertDialogContext';
-
 import {
-  RequestCard,
   type PendingUser,
-} from '@/components/RequestCard/RequestCard';
-import { EmptyRequests } from '@/components/EmptyRequests/EmptyRequests';
+  RequestCard,
+} from '@/features/adminRequests/components/RequestCard';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { api } from '@/lib/api';
 
 interface Curso {
   id: string;
@@ -153,7 +151,11 @@ const NewRequest = () => {
             ))}
           </div>
         ) : (
-          <EmptyRequests />
+          <EmptyState
+            icon={Inbox}
+            title="Nenhuma solicitação pendente"
+            description="Todas as solicitações de acesso foram analisadas. Quando novos alunos se registrarem, eles aparecerão aqui."
+          />
         )}
       </div>
     </div>

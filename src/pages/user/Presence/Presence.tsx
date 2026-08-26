@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
-import PresenceForm from '@/components/forms/PresenceForm';
-import PresenceStatusCard from '@/components/PresenceStatusCard/PresenceStatusCard';
-import PresenceSuccessCard from '@/components/PresenceSuccessCard/PresenceSuccessCard';
-import Header from '@/components/Header/Header';
+import Header from '@/components/layout/Header/Header';
+import StatusCard from '@/features/presence/components/StatusCard';
+import SuccessCard from '@/features/presence/components/SuccessCard';
+import PresenceForm from '@/features/presence/form/PresenceForm';
 
 type PresenceStatus = 'encerrada' | 'ativa' | 'confirmada';
 
@@ -27,10 +27,10 @@ const Presence = () => {
 
       <div className="flex flex-col gap-6">
         {status === 'confirmada' ? (
-          <PresenceSuccessCard confirmationDate={confirmationDate} />
+          <SuccessCard confirmationDate={confirmationDate} />
         ) : (
           <>
-            <PresenceStatusCard isPresenceActive={isPresenceActive} />
+            <StatusCard isPresenceActive={isPresenceActive} />
             <PresenceForm
               isPresenceActive={isPresenceActive}
               onSuccess={handleSuccess}

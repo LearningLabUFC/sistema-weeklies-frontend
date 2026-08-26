@@ -1,15 +1,16 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import LoginForm from '../forms/LoginForm';
-import { useAuth } from '@/context/AuthContext';
-import { useAlertDialog } from '@/context/AlertDialogContext';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/context/AuthContext', () => ({
+import LoginForm from '@/features/auth/components/forms/LoginForm';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useAuth } from '@/hooks/useAuth';
+
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/context/AlertDialogContext', () => ({
+vi.mock('@/hooks/useAlertDialog', () => ({
   useAlertDialog: vi.fn(),
 }));
 

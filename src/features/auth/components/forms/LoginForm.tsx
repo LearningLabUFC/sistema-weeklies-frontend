@@ -1,14 +1,13 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useAuth } from '@/context/AuthContext';
-import { useAlertDialog } from '@/context/AlertDialogContext';
-
-import { Button } from '@/components/ui/button';
 import InputGroup from '@/components/shared/InputGroup/InputGroup';
+import { Button } from '@/components/ui/button';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
+import { useAuth } from '@/hooks/useAuth';
 
 const loginSchema = z.object({
   email: z
