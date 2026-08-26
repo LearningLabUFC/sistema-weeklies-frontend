@@ -1,9 +1,19 @@
-import { AlertTriangle, CheckCircle2, Loader2, Search } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  MoreVertical,
+  Search,
+} from 'lucide-react';
+import { useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ROLE_DISPLAY_NAMES, ROLE_NAME_COLORS } from '@/config/roles';
 import type { Usuario } from '@/pages/admin/Participants/Participants';
+import { getInitials } from '@/utils/formatName';
+
+import { UserDetailsModal } from './UserDetailsModal';
 
 interface UserListProps {
   usuarios: Usuario[];
@@ -12,15 +22,7 @@ interface UserListProps {
   limite: number;
   total: number;
   setPagina: React.Dispatch<React.SetStateAction<number>>;
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  onUpdate?: () => void;
 }
 
 export function UserList({
@@ -30,7 +32,10 @@ export function UserList({
   limite,
   total,
   setPagina,
+  onUpdate = () => window.location.reload(),
 }: UserListProps) {
+  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
+
   return (
     <>
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -79,7 +84,7 @@ export function UserList({
                       {student.curso_nome && (
                         <Badge
                           variant="secondary"
-                          className="bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 text-xs py-0.5"
+                          className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-xs py-0.5"
                         >
                           {student.curso_nome}
                         </Badge>
@@ -87,7 +92,7 @@ export function UserList({
                     </div>
                   </div>
 
-                  <div className="shrink-0 mt-3 sm:mt-0">
+                  <div className="shrink-0 mt-3 sm:mt-0 flex items-center gap-4">
                     {isActive ? (
                       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-full">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -99,10 +104,18 @@ export function UserList({
                       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-full">
                         <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                         <span className="text-sm text-rose-700 dark:text-rose-400 font-medium whitespace-nowrap">
-                          Requer atenção
+                          Inativo
                         </span>
                       </div>
                     )}
+
+                    <button
+                      onClick={() => setSelectedUser(student)}
+                      className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none"
+                      aria-label="Opções do usuário"
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               );
@@ -144,6 +157,15 @@ export function UserList({
           </div>
         </div>
       )}
+
+      <UserDetailsModal
+        user={selectedUser}
+        onClose={() => setSelectedUser(null)}
+        onUpdate={() => {
+          setSelectedUser(null);
+          onUpdate();
+        }}
+      />
     </>
   );
 }
