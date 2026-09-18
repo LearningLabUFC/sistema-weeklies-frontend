@@ -220,7 +220,7 @@ const RegisterForm = () => {
           label="Número da matrícula"
           type="text"
           inputMode="numeric"
-          maxLength={7}
+          maxLength={6}
           placeholder="Ex: 123456"
           registration={register('matricula')}
           error={errors.matricula?.message}
