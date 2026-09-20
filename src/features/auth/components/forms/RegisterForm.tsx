@@ -76,7 +76,7 @@ const RegisterForm = () => {
   useEffect(() => {
     const fetchCursos = async () => {
       try {
-        const response = await api.get<Curso[]>('/domain/cursos');
+        const response = await api.get<Curso[]>('/courses');
         const cursosAtivos = response.data.filter(curso => curso.ativo);
         setCursos(cursosAtivos);
       } catch {
