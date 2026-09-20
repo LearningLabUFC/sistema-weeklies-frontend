@@ -32,7 +32,7 @@ const NewRequest = () => {
         setLoading(true);
         const [usersResponse, cursosResponse] = await Promise.all([
           api.get<PendingUser[]>('/admin/users/pending'),
-          api.get<Curso[]>('/domain/cursos'),
+          api.get<Curso[]>('/courses'),
         ]);
 
         setRequests(usersResponse.data);
