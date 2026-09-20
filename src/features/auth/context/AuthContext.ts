@@ -7,7 +7,7 @@ export interface AuthContextData {
   isAuthenticated: boolean;
   login: (email: string, senha: string) => Promise<void>;
   registerUser: (data: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
   checkUserStatus: () => Promise<void>;
 }
