@@ -57,14 +57,14 @@ describe('AuthContext', () => {
     expect(localStorage.getItem('@LearningLab:token')).toBe('new-token');
   });
 
-  it('deve limpar os dados ao fazer logout', () => {
+  it('deve limpar os dados ao fazer logout', async () => {
     localStorage.setItem('@LearningLab:token', 'fake-token');
     localStorage.setItem('@LearningLab:user', JSON.stringify(mockUser));
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
-    act(() => {
-      result.current.logout();
+    await act(async () => {
+      await result.current.logout();
     });
 
     expect(result.current.isAuthenticated).toBe(false);

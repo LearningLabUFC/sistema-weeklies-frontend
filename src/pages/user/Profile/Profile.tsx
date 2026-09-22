@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { images } from '@/config/images';
 import { ROLE_LABELS } from '@/config/roles';
+import ChangePasswordForm from '@/features/auth/components/forms/ChangePasswordForm';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { api } from '@/lib/api';
 
@@ -36,17 +37,11 @@ interface UpdateProfilePayload {
   nome_completo: string;
   email: string;
   foto_perfil: string;
-  senha?: string;
 }
 
 const profileSchema = z.object({
   nome_completo: z.string().min(1, 'O nome é obrigatório'),
   email: z.email('Digite um email válido'),
-  senha: z
-    .string()
-    .min(8, 'A senha deve ter pelo menos 8 caracteres')
-    .optional()
-    .or(z.literal('')),
   foto_perfil: z.any().optional(),
 });
 
@@ -112,10 +107,6 @@ const Profile = () => {
         email: data.email,
         foto_perfil: nomeArquivoFoto,
       };
-
-      if (data.senha) {
-        payload.senha = data.senha;
-      }
 
       const response = await api.put('/users/me', payload);
       setProfileData(response.data.usuario);
@@ -280,16 +271,6 @@ const Profile = () => {
                 disabled={isSubmitting}
               />
 
-              <InputGroup
-                id="senha"
-                label="Nova senha (opcional)"
-                type="password"
-                placeholder="••••••••"
-                registration={register('senha')}
-                error={errors.senha?.message}
-                disabled={isSubmitting}
-              />
-
               <div className="flex gap-3 pt-4">
                 <Button
                   type="submit"
@@ -312,6 +293,8 @@ const Profile = () => {
           )}
         </CardContent>
       </Card>
+
+      {!isEditing && <ChangePasswordForm />}
     </div>
   );
 };

@@ -26,9 +26,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const response = await api.post('/auth/login', { email, senha });
-      const { token_acesso, usuario } = response.data;
+      const { token_acesso, token_atualizacao, usuario } = response.data;
 
       localStorage.setItem('@LearningLab:token', token_acesso);
+      localStorage.setItem('@LearningLab:refreshToken', token_atualizacao);
       localStorage.setItem('@LearningLab:user', JSON.stringify(usuario));
 
       setUser(usuario);
@@ -43,9 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const response = await api.post('/auth/register', data);
-      const { token_acesso, usuario } = response.data;
+      const { token_acesso, token_atualizacao, usuario } = response.data;
 
       localStorage.setItem('@LearningLab:token', token_acesso);
+      localStorage.setItem('@LearningLab:refreshToken', token_atualizacao);
       localStorage.setItem('@LearningLab:user', JSON.stringify(usuario));
 
       setUser(usuario);
@@ -79,10 +81,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const logout = () => {
-    localStorage.removeItem('@LearningLab:token');
-    localStorage.removeItem('@LearningLab:user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('@LearningLab:refreshToken');
+      await api.post('/auth/logout', {
+        token_atualizacao: refreshToken,
+      });
+    } catch (error) {
+      console.error('Erro ao encerrar sessão no servidor:', error);
+    } finally {
+      localStorage.removeItem('@LearningLab:token');
+      localStorage.removeItem('@LearningLab:refreshToken');
+      localStorage.removeItem('@LearningLab:user');
+      setUser(null);
+    }
   };
 
   const checkUserStatus = async () => {
