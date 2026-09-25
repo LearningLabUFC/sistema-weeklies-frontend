@@ -115,7 +115,7 @@ const Profile = () => {
       setProfileData(response.data.usuario);
       setIsEditing(false);
       setShowChangePassword(false);
-      
+
       reset({
         nome_completo: response.data.usuario.nome_completo,
         email: response.data.usuario.email,
@@ -305,10 +305,12 @@ const Profile = () => {
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowChangePassword((prev) => !prev)}
+                  onClick={() => setShowChangePassword(prev => !prev)}
                   className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 underline underline-offset-4 cursor-pointer transition-colors"
                 >
-                  {showChangePassword ? 'Cancelar alteração de senha' : 'Alterar Senha'}
+                  {showChangePassword
+                    ? 'Cancelar alteração de senha'
+                    : 'Alterar Senha'}
                 </button>
               </div>
 
@@ -322,8 +324,6 @@ const Profile = () => {
           )}
         </CardContent>
       </Card>
-
-
     </div>
   );
 };
