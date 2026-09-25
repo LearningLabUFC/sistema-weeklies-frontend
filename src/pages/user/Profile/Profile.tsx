@@ -54,12 +54,13 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const {
     register,
     handleSubmit,
-    setValue,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
   });
@@ -71,8 +72,10 @@ const Profile = () => {
         const userData = response.data.usuario;
         setProfileData(userData);
 
-        setValue('nome_completo', userData.nome_completo);
-        setValue('email', userData.email);
+        reset({
+          nome_completo: userData.nome_completo,
+          email: userData.email,
+        });
       } catch {
         showAlertDialog({
           type: 'error',
@@ -85,7 +88,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [setValue, showAlertDialog]);
+  }, [reset, showAlertDialog]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
@@ -111,6 +114,12 @@ const Profile = () => {
       const response = await api.put('/users/me', payload);
       setProfileData(response.data.usuario);
       setIsEditing(false);
+      setShowChangePassword(false);
+
+      reset({
+        nome_completo: response.data.usuario.nome_completo,
+        email: response.data.usuario.email,
+      });
 
       showAlertDialog({
         type: 'success',
@@ -271,10 +280,10 @@ const Profile = () => {
                 disabled={isSubmitting}
               />
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 border-b border-slate-100 dark:border-slate-800 pb-6">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isDirty}
                   className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white min-w-32"
                 >
                   {isSubmitting ? 'Salvando...' : 'Salvar alterações'}
@@ -282,19 +291,39 @@ const Profile = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setIsEditing(false);
+                    setShowChangePassword(false);
+                  }}
                   disabled={isSubmitting}
                   className="dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                 >
                   Cancelar
                 </Button>
               </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowChangePassword(prev => !prev)}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 underline underline-offset-4 cursor-pointer transition-colors"
+                >
+                  {showChangePassword
+                    ? 'Cancelar alteração de senha'
+                    : 'Alterar Senha'}
+                </button>
+              </div>
+
+              {showChangePassword && (
+                <ChangePasswordForm
+                  embedded
+                  onSuccess={() => setShowChangePassword(false)}
+                />
+              )}
             </form>
           )}
         </CardContent>
       </Card>
-
-      {!isEditing && <ChangePasswordForm />}
     </div>
   );
 };
