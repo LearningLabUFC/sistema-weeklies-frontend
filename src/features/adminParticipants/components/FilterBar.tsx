@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 
 const ALL_ROLES = [
   { value: '', label: 'Todos os cargos' },
-  { value: 'aluno', label: 'Alunos' },
+  { value: 'usuario', label: 'Usuarios' },
   { value: 'leader', label: 'Líderes' },
   { value: 'admin', label: 'Administradores' },
 ];
@@ -29,7 +29,7 @@ export function FilterBar({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
           <Input
             type="text"
-            placeholder="Buscar alunos por nome ou e-mail..."
+            placeholder="Buscar usuarios por nome ou e-mail..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="pl-10 h-11 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"

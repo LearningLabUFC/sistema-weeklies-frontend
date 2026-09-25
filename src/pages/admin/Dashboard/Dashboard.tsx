@@ -53,7 +53,7 @@ export function Dashboard() {
 
   const stats: StatCardProps[] = [
     {
-      label: 'Total de alunos',
+      label: 'Total de usuarios',
       value: allStudents.length,
       icon: Users,
       color:
@@ -62,7 +62,7 @@ export function Dashboard() {
       to: '/admin/participantes',
     },
     {
-      label: 'Alunos ativos',
+      label: 'Usuarios ativos',
       value: activeStudents.length,
       icon: TrendingUp,
       color:

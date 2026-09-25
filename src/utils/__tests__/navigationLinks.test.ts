@@ -27,8 +27,8 @@ describe('navigationLinks utility', () => {
       expect(getNavigationLinks(ROLE_IDS.LEADER)).toEqual(leaderLinks);
     });
 
-    it('deve retornar links base para a role de aluno ou qualquer outra role desconhecida', () => {
-      expect(getNavigationLinks(ROLE_IDS.ALUNO)).toEqual(userLinks);
+    it('deve retornar links base para a role de usuario ou qualquer outra role desconhecida', () => {
+      expect(getNavigationLinks(ROLE_IDS.USUARIO)).toEqual(userLinks);
       expect(getNavigationLinks('')).toEqual(userLinks);
     });
 
@@ -43,7 +43,7 @@ describe('navigationLinks utility', () => {
       );
 
       vi.stubEnv('VITE_SHOW_ALL_LINKS', 'true');
-      expect(getNavigationLinks(ROLE_IDS.ALUNO)).toEqual(allLinks);
+      expect(getNavigationLinks(ROLE_IDS.USUARIO)).toEqual(allLinks);
     });
   });
 
@@ -60,9 +60,9 @@ describe('navigationLinks utility', () => {
       expect(details.color).toContain('bg-[#FFBF00]');
     });
 
-    it('deve retornar detalhes padrão (Aluno) para roles desconhecidas', () => {
+    it('deve retornar detalhes padrão (Usuario) para roles desconhecidas', () => {
       const details = getRoleDetails('visitante');
-      expect(details.label).toBe('Aluno');
+      expect(details.label).toBe('Usuario');
       expect(details.color).toContain('bg-[#457EFF]');
     });
   });

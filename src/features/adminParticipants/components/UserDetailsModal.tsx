@@ -263,7 +263,7 @@ export function UserDetailsModal({
                       <SelectValue placeholder="Selecione um cargo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="aluno">Aluno</SelectItem>
+                      <SelectItem value="usuario">Usuario</SelectItem>
                       <SelectItem value="lider">Líder</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
                       {/* Essa opção aparece automaticamente se isSuperAdmin for verdadeiro no seu useAuth */}

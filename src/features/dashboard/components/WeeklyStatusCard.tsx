@@ -37,7 +37,7 @@ export function WeeklyStatusCard({
         <div className="relative w-full sm:w-64">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <Input
-            placeholder="Buscar aluno..."
+            placeholder="Buscar usuario..."
             value={searchTerm}
             onChange={e => onSearchChange(e.target.value)}
             className="pl-9 h-9 text-xs sm:text-sm bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500"
@@ -82,7 +82,7 @@ export function WeeklyStatusCard({
           })
         ) : (
           <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-            Nenhum aluno encontrado para "{searchTerm}".
+            Nenhum usuario encontrado para "{searchTerm}".
           </div>
         )}
       </CardContent>
