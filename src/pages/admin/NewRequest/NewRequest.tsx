@@ -154,7 +154,7 @@ const NewRequest = () => {
           <EmptyState
             icon={Inbox}
             title="Nenhuma solicitação pendente"
-            description="Todas as solicitações de acesso foram analisadas. Quando novos alunos se registrarem, eles aparecerão aqui."
+            description="Todas as solicitações de acesso foram analisadas. Quando novos usuarios se registrarem, eles aparecerão aqui."
           />
         )}
       </div>

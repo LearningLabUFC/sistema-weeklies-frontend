@@ -46,8 +46,8 @@ export const getRoleDetails = (role: string) => {
 
   return (
     detailsMap[role] || {
-      label: ROLE_LABELS[ROLE_IDS.ALUNO] || 'Aluno',
-      color: ROLE_NAME_COLORS.aluno,
+      label: ROLE_LABELS[ROLE_IDS.USUARIO] || 'Usuario',
+      color: ROLE_NAME_COLORS.usuario,
     }
   );
 };

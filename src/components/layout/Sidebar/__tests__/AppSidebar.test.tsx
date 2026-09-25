@@ -86,7 +86,7 @@ describe('AppSidebar Component', () => {
     foto_perfil: 'avatar_padrao.png',
     curso_id: 'curso-123',
     status_id: 'ativo',
-    global_role: ROLE_IDS.ALUNO,
+    global_role: ROLE_IDS.USUARIO,
   };
 
   beforeEach(() => {
@@ -135,7 +135,7 @@ describe('AppSidebar Component', () => {
 
   it('deve chamar o AlertDialog e executar onConfirm ao fazer logout', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { ...mockBaseUser, global_role: ROLE_IDS.ALUNO },
+      user: { ...mockBaseUser, global_role: ROLE_IDS.USUARIO },
       isAuthenticated: true,
       logout: mockLogout,
       login: vi.fn(),

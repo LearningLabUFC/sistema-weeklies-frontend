@@ -125,7 +125,7 @@ export function UserList({
           <div className="p-16 text-center">
             <Search className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-2">
-              Nenhum aluno encontrado
+              Nenhum usuario encontrado
             </h3>
             <p className="text-slate-500 dark:text-slate-400">
               Tente ajustar os filtros de busca ou limpar o termo digitado.

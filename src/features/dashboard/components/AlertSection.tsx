@@ -28,7 +28,7 @@ export function AlertSection({ alertStudents }: AlertSectionProps) {
             <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
           </div>
           <CardTitle className="text-base font-semibold text-red-900 dark:text-red-200">
-            Alunos sem Weekly ({alertStudents.length})
+            Usuarios sem Weekly ({alertStudents.length})
           </CardTitle>
         </div>
         <Badge
