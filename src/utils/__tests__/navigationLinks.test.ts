@@ -27,7 +27,7 @@ describe('navigationLinks utility', () => {
       expect(getNavigationLinks(ROLE_IDS.LEADER)).toEqual(leaderLinks);
     });
 
-    it('deve retornar links base para a role de usuario ou qualquer outra role desconhecida', () => {
+    it('deve retornar links base para a role de usuário ou qualquer outra role desconhecida', () => {
       expect(getNavigationLinks(ROLE_IDS.USUARIO)).toEqual(userLinks);
       expect(getNavigationLinks('')).toEqual(userLinks);
     });
@@ -60,9 +60,9 @@ describe('navigationLinks utility', () => {
       expect(details.color).toContain('bg-[#FFBF00]');
     });
 
-    it('deve retornar detalhes padrão (Usuario) para roles desconhecidas', () => {
+    it('deve retornar detalhes padrão (Usuário) para roles desconhecidas', () => {
       const details = getRoleDetails('visitante');
-      expect(details.label).toBe('Usuario');
+      expect(details.label).toBe('Usuário');
       expect(details.color).toContain('bg-[#457EFF]');
     });
   });

@@ -6,14 +6,14 @@ export const ROLE_IDS = {
 } as const;
 
 export const ROLE_LABELS: Record<string, string> = {
-  [ROLE_IDS.USUARIO]: 'Usuario',
+  [ROLE_IDS.USUARIO]: 'Usuário',
   [ROLE_IDS.ADMIN]: 'Administrador',
   [ROLE_IDS.SUPER_ADMIN]: 'Coordenadora',
   [ROLE_IDS.LEADER]: 'Líder',
 };
 
 export const ROLE_DISPLAY_NAMES: Record<string, string> = {
-  usuario: 'Usuario',
+  usuario: 'Usuário',
   admin: 'Administrador',
   super_admin: 'Coordenadora',
   coordenadora: 'Coordenadora',

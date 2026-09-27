@@ -116,7 +116,7 @@ export default function Participants() {
   return (
     <div className="w-full max-w-5xl mx-auto py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Header
-        title="Usuarios"
+        title="Usuários"
         subtitle="Acompanhe o progresso dos participantes"
       />
 
