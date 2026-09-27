@@ -71,10 +71,24 @@ const ChangePasswordForm = ({
       reset();
       onSuccess?.();
     } catch (error: unknown) {
+      console.error('Erro ao alterar senha:', error);
       let errorMessage = 'Ocorreu um erro ao alterar a senha.';
 
       if (isAxiosError(error)) {
-        errorMessage = error.response?.data?.mensagem || errorMessage;
+        const responseData = error.response?.data;
+        if (responseData?.mensagem) {
+          errorMessage = responseData.mensagem;
+        } else if (typeof responseData?.detail === 'string') {
+          errorMessage = responseData.detail;
+        } else if (Array.isArray(responseData?.detail) && responseData.detail[0]?.msg) {
+          errorMessage = responseData.detail[0].msg;
+        } else if (responseData?.message) {
+          errorMessage = responseData.message;
+        } else if (error.response?.status === 404) {
+          errorMessage = 'Rota de alteração de senha não encontrada no servidor (404).';
+        } else if (error.response?.status === 401) {
+          errorMessage = 'Sessão expirada ou senha atual incorreta.';
+        }
       }
 
       showAlertDialog({
@@ -121,8 +135,7 @@ const ChangePasswordForm = ({
 
       <div className="pt-2">
         <Button
-          type={embedded ? 'button' : 'submit'}
-          onClick={embedded ? handleSubmit(onSubmit) : undefined}
+          type="submit"
           disabled={isSubmitting}
           className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white min-w-40"
         >
@@ -134,7 +147,10 @@ const ChangePasswordForm = ({
 
   if (embedded) {
     return (
-      <div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4 mt-2"
+      >
         <div className="flex items-center gap-2 mb-2">
           <KeyRound className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           <h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">
@@ -142,7 +158,7 @@ const ChangePasswordForm = ({
           </h3>
         </div>
         {formFields}
-      </div>
+      </form>
     );
   }
 
