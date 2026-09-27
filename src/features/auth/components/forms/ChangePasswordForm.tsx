@@ -80,12 +80,16 @@ const ChangePasswordForm = ({
           errorMessage = responseData.mensagem;
         } else if (typeof responseData?.detail === 'string') {
           errorMessage = responseData.detail;
-        } else if (Array.isArray(responseData?.detail) && responseData.detail[0]?.msg) {
+        } else if (
+          Array.isArray(responseData?.detail) &&
+          responseData.detail[0]?.msg
+        ) {
           errorMessage = responseData.detail[0].msg;
         } else if (responseData?.message) {
           errorMessage = responseData.message;
         } else if (error.response?.status === 404) {
-          errorMessage = 'Rota de alteração de senha não encontrada no servidor (404).';
+          errorMessage =
+            'Rota de alteração de senha não encontrada no servidor (404).';
         } else if (error.response?.status === 401) {
           errorMessage = 'Sessão expirada ou senha atual incorreta.';
         }
