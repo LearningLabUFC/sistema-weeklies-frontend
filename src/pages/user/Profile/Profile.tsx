@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isAxiosError } from 'axios';
 import { CalendarDays, Clock, Mail, Pencil } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -54,25 +54,33 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const {
     register,
     handleSubmit,
-    setValue,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
   });
 
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const fetchProfile = async () => {
       try {
         const response = await api.get('/users/me');
         const userData = response.data.usuario;
         setProfileData(userData);
 
-        setValue('nome_completo', userData.nome_completo);
-        setValue('email', userData.email);
+        reset({
+          nome_completo: userData.nome_completo,
+          email: userData.email,
+        });
       } catch {
         showAlertDialog({
           type: 'error',
@@ -85,7 +93,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [setValue, showAlertDialog]);
+  }, [reset, showAlertDialog]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
@@ -111,6 +119,12 @@ const Profile = () => {
       const response = await api.put('/users/me', payload);
       setProfileData(response.data.usuario);
       setIsEditing(false);
+      setShowChangePassword(false);
+
+      reset({
+        nome_completo: response.data.usuario.nome_completo,
+        email: response.data.usuario.email,
+      });
 
       showAlertDialog({
         type: 'success',
@@ -237,64 +251,92 @@ const Profile = () => {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-6">
-                Editar perfil
-              </h2>
+            <div className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-6">
+                  Editar perfil
+                </h2>
 
-              <InputGroup
-                id="foto_perfil"
-                label="Foto de Perfil"
-                type="file"
-                accept="image/*"
-                registration={register('foto_perfil')}
-                error={errors.foto_perfil?.message as string}
-                disabled={isSubmitting}
-                className="file:mr-4 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 dark:hover:file:bg-indigo-900/50 cursor-pointer h-auto py-2"
-              />
-
-              <InputGroup
-                id="nome_completo"
-                label="Nome completo"
-                type="text"
-                registration={register('nome_completo')}
-                error={errors.nome_completo?.message}
-                disabled={isSubmitting}
-              />
-
-              <InputGroup
-                id="email"
-                label="Email"
-                type="email"
-                registration={register('email')}
-                error={errors.email?.message}
-                disabled={isSubmitting}
-              />
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="submit"
+                <InputGroup
+                  id="foto_perfil"
+                  label="Foto de Perfil"
+                  type="file"
+                  accept="image/*"
+                  registration={register('foto_perfil')}
+                  error={errors.foto_perfil?.message as string}
                   disabled={isSubmitting}
-                  className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white min-w-32"
-                >
-                  {isSubmitting ? 'Salvando...' : 'Salvar alterações'}
-                </Button>
-                <Button
+                  className="file:mr-4 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 dark:hover:file:bg-indigo-900/50 cursor-pointer h-auto py-2"
+                />
+
+                <InputGroup
+                  id="nome_completo"
+                  label="Nome completo"
+                  type="text"
+                  registration={register('nome_completo')}
+                  error={errors.nome_completo?.message}
+                  disabled={isSubmitting}
+                />
+
+                <InputGroup
+                  id="email"
+                  label="Email"
+                  type="email"
+                  registration={register('email')}
+                  error={errors.email?.message}
+                  disabled={isSubmitting}
+                />
+
+                <div className="flex gap-3 pt-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !isDirty}
+                    className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white min-w-32"
+                  >
+                    {isSubmitting ? 'Salvando...' : 'Salvar alterações'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setShowChangePassword(false);
+                      if (profileData) {
+                        reset({
+                          nome_completo: profileData.nome_completo,
+                          email: profileData.email,
+                        });
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    className="dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+
+              <div className="pt-2">
+                <button
                   type="button"
-                  variant="outline"
-                  onClick={() => setIsEditing(false)}
-                  disabled={isSubmitting}
-                  className="dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+                  onClick={() => setShowChangePassword(prev => !prev)}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 underline underline-offset-4 cursor-pointer transition-colors"
                 >
-                  Cancelar
-                </Button>
+                  {showChangePassword
+                    ? 'Cancelar alteração de senha'
+                    : 'Alterar Senha'}
+                </button>
               </div>
-            </form>
+
+              {showChangePassword && (
+                <ChangePasswordForm
+                  embedded
+                  onSuccess={() => setShowChangePassword(false)}
+                />
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
-
-      {!isEditing && <ChangePasswordForm />}
     </div>
   );
 };

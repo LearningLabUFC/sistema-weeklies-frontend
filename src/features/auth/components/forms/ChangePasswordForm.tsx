@@ -33,7 +33,15 @@ const changePasswordSchema = z
 
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
-const ChangePasswordForm = () => {
+interface ChangePasswordFormProps {
+  embedded?: boolean;
+  onSuccess?: () => void;
+}
+
+const ChangePasswordForm = ({
+  embedded = false,
+  onSuccess,
+}: ChangePasswordFormProps) => {
   const { showAlertDialog } = useAlertDialog();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,11 +69,30 @@ const ChangePasswordForm = () => {
       });
 
       reset();
+      onSuccess?.();
     } catch (error: unknown) {
+      console.error('Erro ao alterar senha:', error);
       let errorMessage = 'Ocorreu um erro ao alterar a senha.';
 
       if (isAxiosError(error)) {
-        errorMessage = error.response?.data?.mensagem || errorMessage;
+        const responseData = error.response?.data;
+        if (responseData?.mensagem) {
+          errorMessage = responseData.mensagem;
+        } else if (typeof responseData?.detail === 'string') {
+          errorMessage = responseData.detail;
+        } else if (
+          Array.isArray(responseData?.detail) &&
+          responseData.detail[0]?.msg
+        ) {
+          errorMessage = responseData.detail[0].msg;
+        } else if (responseData?.message) {
+          errorMessage = responseData.message;
+        } else if (error.response?.status === 404) {
+          errorMessage =
+            'Rota de alteração de senha não encontrada no servidor (404).';
+        } else if (error.response?.status === 401) {
+          errorMessage = 'Sessão expirada ou senha atual incorreta.';
+        }
       }
 
       showAlertDialog({
@@ -77,6 +104,67 @@ const ChangePasswordForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  const formFields = (
+    <>
+      <InputGroup
+        id="senha_atual"
+        label="Senha atual"
+        type="password"
+        placeholder="••••••••"
+        registration={register('senha_atual')}
+        error={errors.senha_atual?.message}
+        disabled={isSubmitting}
+      />
+
+      <InputGroup
+        id="nova_senha"
+        label="Nova senha"
+        type="password"
+        placeholder="••••••••"
+        registration={register('nova_senha')}
+        error={errors.nova_senha?.message}
+        disabled={isSubmitting}
+      />
+
+      <InputGroup
+        id="confirmar_senha"
+        label="Confirmar nova senha"
+        type="password"
+        placeholder="••••••••"
+        registration={register('confirmar_senha')}
+        error={errors.confirmar_senha?.message}
+        disabled={isSubmitting}
+      />
+
+      <div className="pt-2">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white min-w-40"
+        >
+          {isSubmitting ? 'Alterando...' : 'Alterar senha'}
+        </Button>
+      </div>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4 mt-2"
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <KeyRound className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+            Alterar senha
+          </h3>
+        </div>
+        {formFields}
+      </form>
+    );
+  }
 
   return (
     <Card className="rounded-2xl shadow-sm border-transparent dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
@@ -91,45 +179,7 @@ const ChangePasswordForm = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <InputGroup
-            id="senha_atual"
-            label="Senha atual"
-            type="password"
-            placeholder="••••••••"
-            registration={register('senha_atual')}
-            error={errors.senha_atual?.message}
-            disabled={isSubmitting}
-          />
-
-          <InputGroup
-            id="nova_senha"
-            label="Nova senha"
-            type="password"
-            placeholder="••••••••"
-            registration={register('nova_senha')}
-            error={errors.nova_senha?.message}
-            disabled={isSubmitting}
-          />
-
-          <InputGroup
-            id="confirmar_senha"
-            label="Confirmar nova senha"
-            type="password"
-            placeholder="••••••••"
-            registration={register('confirmar_senha')}
-            error={errors.confirmar_senha?.message}
-            disabled={isSubmitting}
-          />
-
-          <div className="pt-2">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white min-w-40"
-            >
-              {isSubmitting ? 'Alterando...' : 'Alterar senha'}
-            </Button>
-          </div>
+          {formFields}
         </form>
       </CardContent>
     </Card>
