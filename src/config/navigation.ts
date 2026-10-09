@@ -9,6 +9,7 @@ import {
   Home,
   LayoutDashboard,
   Link2,
+  ListTodo,
   PlaySquare,
   ShieldCheck,
   User,
@@ -22,6 +23,8 @@ import type { NavigationLink } from '@/types/sidebar';
 const baseLinks: NavigationLink[] = [
   { to: '/', icon: Home, label: 'Dashboard' },
   { to: '/weeklies', icon: FileText, label: 'Minhas weeklies' },
+  { to: '/tarefas', icon: ListTodo, label: 'Minhas tarefas' },
+  { to: '/setores', icon: FolderKanban, label: 'Setores' },
   { to: '/presenca', icon: CheckSquare, label: 'Presença' },
   { to: '/controle-horas', icon: Clock, label: 'Controle de horas' },
   { to: '/perfil', icon: User, label: 'Perfil' },
@@ -29,10 +32,7 @@ const baseLinks: NavigationLink[] = [
 
 export const userLinks: NavigationLink[] = [...baseLinks];
 
-export const leaderLinks: NavigationLink[] = [
-  ...baseLinks,
-  { to: 'lider/meu-projeto', icon: FolderKanban, label: 'Meu projeto' },
-];
+export const leaderLinks: NavigationLink[] = [...baseLinks];
 
 export const adminLinks: NavigationLink[] = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
@@ -42,7 +42,7 @@ export const adminLinks: NavigationLink[] = [
     icon: UserRoundPlus,
     label: 'Solicitações',
   },
-  { to: '/admin/projetos', icon: FolderKanban, label: 'Projetos' },
+  { to: '/admin/setores', icon: FolderKanban, label: 'Setores' },
   { to: '/admin/perfil', icon: UserStar, label: 'Perfil' },
   {
     to: '/admin/frequencias',

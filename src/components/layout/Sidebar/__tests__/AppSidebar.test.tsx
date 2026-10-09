@@ -179,7 +179,7 @@ describe('AppSidebar Component', () => {
 
     renderComponent();
 
-    const link = screen.getByText('Projetos');
+    const link = screen.getByText('Setores');
     fireEvent.click(link);
 
     expect(mockSetOpenMobile).toHaveBeenCalledWith(false);
