@@ -440,4 +440,43 @@ describe('Weeklies Page', () => {
     expect(screen.getByText('Painel Admin Redirect')).toBeInTheDocument();
     expect(weekliesApi.getCurrentWeekly).not.toHaveBeenCalled();
   });
+
+  it('exibe alerta de erro quando a submissão (W05) ou reabertura (W06) falham', async () => {
+    const user = userEvent.setup();
+    const showAlertDialogMock = vi.fn();
+    vi.mocked(useAlertDialog).mockReturnValue({
+      showAlertDialog: showAlertDialogMock,
+      hideAlertDialog: vi.fn(),
+    });
+
+    vi.mocked(weekliesApi.getCurrentWeekly).mockResolvedValue(mockWeekly);
+    vi.mocked(weekliesApi.submit).mockRejectedValueOnce(
+      new Error('Erro de conexão ao enviar weekly'),
+    );
+
+    render(
+      <MemoryRouter>
+        <Weeklies />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Desenvolver login JWT')).toBeInTheDocument();
+    });
+
+    const submitBtn = screen.getByRole('button', {
+      name: /enviar weekly \(w05\)/i,
+    });
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      expect(showAlertDialogMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          title: 'Erro ao enviar weekly',
+          message: 'Erro de conexão ao enviar weekly',
+        }),
+      );
+    });
+  });
 });

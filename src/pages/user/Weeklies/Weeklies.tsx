@@ -5,7 +5,7 @@ import {
   Send,
   Sparkles,
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import Header from '@/components/layout/Header/Header';
@@ -286,6 +286,13 @@ function SectorWeeklies() {
         });
         refreshCurrentWeekly();
       },
+      onError: err => {
+        showAlertDialog({
+          type: 'error',
+          title: 'Erro ao enviar weekly',
+          message: err.message,
+        });
+      },
     },
   );
 
@@ -320,6 +327,13 @@ function SectorWeeklies() {
             'Weekly reaberta com sucesso. Você pode editar as tarefas novamente.',
         });
         refreshCurrentWeekly();
+      },
+      onError: err => {
+        showAlertDialog({
+          type: 'error',
+          title: 'Erro ao reabrir weekly',
+          message: err.message,
+        });
       },
     },
   );
@@ -436,6 +450,23 @@ function SectorWeeklies() {
         isRejeitadaWithinGracePeriod(currentWeekly.avaliada_em))),
   );
 
+  const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
+
+  const handlePendingChange = useCallback(
+    (weeklyTaskId: string, hasPending: boolean) => {
+      setPendingTaskIds(prev => {
+        const next = new Set(prev);
+        if (hasPending) {
+          next.add(weeklyTaskId);
+        } else {
+          next.delete(weeklyTaskId);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   const canSubmit = Boolean(
     currentWeekly &&
     !isLoadingWeekly &&
@@ -444,6 +475,7 @@ function SectorWeeklies() {
     isEditable &&
     currentWeekly.tasks.length > 0 &&
     activeMutationsCount === 0 &&
+    pendingTaskIds.size === 0 &&
     !submitWeeklyMutation.isMutating,
   );
 
@@ -697,6 +729,7 @@ function SectorWeeklies() {
                     }
                     onUpdate={handleUpdateTaskItem}
                     onRemove={handleRemoveTaskItem}
+                    onPendingChange={handlePendingChange}
                   />
                 ))
               )}
