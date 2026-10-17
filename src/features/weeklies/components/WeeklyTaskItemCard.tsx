@@ -1,5 +1,5 @@
 import { AlertCircle, Calendar, CheckCircle2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ interface WeeklyTaskItemCardProps {
     changes: { concluida?: boolean; impedimento?: string | null },
   ) => Promise<void>;
   onRemove: (weeklyTaskId: string) => Promise<void>;
+  onPendingChange?: (weeklyTaskId: string, hasPending: boolean) => void;
   disabled?: boolean;
 }
 
@@ -31,6 +32,7 @@ export function WeeklyTaskItemCard({
   isLastItemInRejeitada,
   onUpdate,
   onRemove,
+  onPendingChange,
   disabled = false,
 }: WeeklyTaskItemCardProps) {
   const { showAlertDialog } = useAlertDialog();
@@ -42,10 +44,21 @@ export function WeeklyTaskItemCard({
   );
   const [isSavingImpediment, setIsSavingImpediment] = useState(false);
 
+  const hasUnsavedImpediment =
+    isEditingImpediment &&
+    impedimentText.trim() !== (taskItem.impedimento || '');
+  const hasPendingChanges = hasUnsavedImpediment || isSavingImpediment;
+
+  useEffect(() => {
+    onPendingChange?.(taskItem.id, hasPendingChanges);
+    return () => {
+      onPendingChange?.(taskItem.id, false);
+    };
+  }, [taskItem.id, hasPendingChanges, onPendingChange]);
+
   const canRemove =
-    isEditable &&
     !isLastItemInRejeitada &&
-    (taskItem.origem === 'NOVA' || canRemoveHerdada);
+    ((isEditable && taskItem.origem === 'NOVA') || canRemoveHerdada);
 
   const handleCheckboxToggle = async (checked: boolean) => {
     if (!isEditable || disabled) return;
@@ -228,6 +241,23 @@ export function WeeklyTaskItemCard({
                   className="text-xs bg-white dark:bg-slate-900 min-h-[60px]"
                 />
                 <div className="flex justify-end gap-2">
+                  {hasUnsavedImpediment && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setImpedimentText(taskItem.impedimento || '');
+                        if (!taskItem.impedimento) {
+                          setIsEditingImpediment(false);
+                        }
+                      }}
+                      disabled={disabled || isSavingImpediment}
+                      className="text-xs text-slate-500 hover:text-slate-700"
+                    >
+                      Cancelar
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"

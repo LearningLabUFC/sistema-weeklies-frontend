@@ -270,4 +270,150 @@ describe('WeeklyDetailView', () => {
       screen.getByRole('button', { name: /^fechar$/i }),
     ).toBeInTheDocument();
   });
+
+  it('bloqueia e desabilita o reenvio da weekly enquanto houver alteração de impedimento pendente de salvamento', async () => {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const rejectedWeekly: WeeklyResponse = {
+      ...baseWeekly,
+      status: 'REJEITADA',
+      avaliada_em: twoHoursAgo,
+      observacao_lider: 'Favor justificar atrasos e corrigir pendências.',
+      tasks: [
+        {
+          id: 'wt-1',
+          task_id: 't-1',
+          titulo: 'Tarefa Rejeitada',
+          descricao: 'Descrição',
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-02',
+          concluida: false,
+          impedimento: null,
+          posicao: 0,
+          origem: 'NOVA',
+        },
+      ],
+    };
+
+    vi.mocked(weekliesApi.getById).mockResolvedValue(rejectedWeekly);
+    vi.mocked(weekliesApi.submit).mockResolvedValue({
+      ...rejectedWeekly,
+      status: 'ENVIADA',
+    });
+
+    renderWithProviders(<WeeklyDetailView weeklyId="w-456" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /reenviar weekly corrigida/i }),
+      ).toBeEnabled();
+    });
+
+    // Abre seção de impedimento e digita texto não salvo
+    const addImpedimentBtn = screen.getByRole('button', {
+      name: /registrar impedimento/i,
+    });
+    fireEvent.click(addImpedimentBtn);
+
+    const textarea = screen.getByPlaceholderText(
+      /explique detalhadamente o motivo/i,
+    );
+    fireEvent.change(textarea, {
+      target: { value: 'Bloqueio externo na API' },
+    });
+
+    // Botão de reenvio deve ficar desabilitado e exibir mensagem de aviso
+    expect(
+      screen.getByText(/salve as alterações pendentes antes de enviar/i),
+    ).toBeInTheDocument();
+
+    const resubmitBtn = screen.getByRole('button', {
+      name: /reenviar weekly corrigida/i,
+    });
+    expect(resubmitBtn).toBeDisabled();
+
+    fireEvent.click(resubmitBtn);
+    expect(weekliesApi.submit).not.toHaveBeenCalled();
+
+    // Cancelar restaura o estado e libera o reenvio
+    const cancelBtn = screen.getByRole('button', { name: /cancelar/i });
+    fireEvent.click(cancelBtn);
+
+    expect(
+      screen.queryByText(/salve as alterações pendentes antes de enviar/i),
+    ).not.toBeInTheDocument();
+    expect(resubmitBtn).toBeEnabled();
+  });
+
+  it('permite que líderes e administradores removam tarefas herdadas de outro membro em weekly RASCUNHO ou REJEITADA', async () => {
+    const draftWeeklyOtherMember: WeeklyResponse = {
+      ...baseWeekly,
+      usuario_id: 'u-membro-outro',
+      status: 'RASCUNHO',
+      tasks: [
+        {
+          id: 'wt-herdada',
+          task_id: 't-10',
+          titulo: 'Tarefa Herdada de Outro Membro',
+          descricao: 'Rollover',
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-02',
+          concluida: false,
+          impedimento: null,
+          posicao: 0,
+          origem: 'HERDADA',
+        },
+        {
+          id: 'wt-nova',
+          task_id: 't-11',
+          titulo: 'Segunda Tarefa',
+          descricao: 'Nova',
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-02',
+          concluida: false,
+          impedimento: null,
+          posicao: 1,
+          origem: 'NOVA',
+        },
+      ],
+    };
+
+    vi.mocked(weekliesApi.getById).mockResolvedValue(draftWeeklyOtherMember);
+    vi.mocked(weekliesApi.removeTask).mockResolvedValue({
+      mensagem: 'Tarefa removida da weekly com sucesso.',
+    });
+
+    renderWithProviders(
+      <WeeklyDetailView
+        weeklyId="w-456"
+        isLeaderOrAdmin={true}
+        currentUserId="u-lider-setor"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Tarefa Herdada de Outro Membro'),
+      ).toBeInTheDocument();
+    });
+
+    // Deve exibir botão de remover tarefa mesmo sendo herdada de outro membro
+    const removeButtons = screen.getAllByRole('button', {
+      name: /remover tarefa da weekly/i,
+    });
+    expect(removeButtons.length).toBeGreaterThan(0);
+
+    // Clica no botão de remover da tarefa herdada
+    fireEvent.click(removeButtons[0]);
+
+    // Diálogo de confirmação do AlertDialog deve aparecer
+    const confirmBtn = screen.getByRole('button', { name: /^remover$/i });
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(weekliesApi.removeTask).toHaveBeenCalledWith(
+        'w-456',
+        'wt-herdada',
+      );
+    });
+  });
 });

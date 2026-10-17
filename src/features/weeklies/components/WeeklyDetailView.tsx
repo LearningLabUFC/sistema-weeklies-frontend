@@ -59,6 +59,23 @@ export const WeeklyDetailView = ({
   const { showAlertDialog } = useAlertDialog();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isEvaluateModalOpen, setIsEvaluateModalOpen] = useState(false);
+  const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
+  const [isUpdatingTask, setIsUpdatingTask] = useState(false);
+
+  const handlePendingChange = useCallback(
+    (weeklyTaskId: string, hasPending: boolean) => {
+      setPendingTaskIds(prev => {
+        const next = new Set(prev);
+        if (hasPending) {
+          next.add(weeklyTaskId);
+        } else {
+          next.delete(weeklyTaskId);
+        }
+        return next;
+      });
+    },
+    [],
+  );
 
   // W04: Get weekly by ID
   const fetchWeekly = useCallback(async () => {
@@ -179,12 +196,20 @@ export const WeeklyDetailView = ({
   // Apenas o próprio proprietário pode reabrir uma weekly ENVIADA dentro da janela
   const canReopen = isOwner && weekly.status === 'ENVIADA' && dentroDaJanela();
 
+  // Líder do setor ou admin pode gerenciar/desvincular tarefas em relatórios rascunho ou rejeitados
+  const canLeaderRemoveTasks =
+    Boolean(isLeaderOrAdminEffective) &&
+    (weekly.status === 'RASCUNHO' || weekly.status === 'REJEITADA');
+
+  const hasPendingTaskChanges = pendingTaskIds.size > 0 || isUpdatingTask;
+
   // W10: Update item
   const handleUpdateTask = async (
     weeklyTaskId: string,
     changes: { concluida?: boolean; impedimento?: string | null },
   ) => {
     try {
+      setIsUpdatingTask(true);
       await weekliesApi.updateTask(weekly.id, weeklyTaskId, changes);
       const updated = await refetch();
       if (updated) onWeeklyUpdated?.(updated);
@@ -197,6 +222,8 @@ export const WeeklyDetailView = ({
         message: msg,
       });
       throw err;
+    } finally {
+      setIsUpdatingTask(false);
     }
   };
 
@@ -417,12 +444,13 @@ export const WeeklyDetailView = ({
               key={taskItem.id}
               taskItem={taskItem}
               isEditable={isEditable}
-              canRemoveHerdada={Boolean(isLeaderOrAdminEffective)}
+              canRemoveHerdada={canLeaderRemoveTasks}
               isLastItemInRejeitada={
                 weekly.status === 'REJEITADA' && weekly.tasks.length <= 1
               }
               onUpdate={handleUpdateTask}
               onRemove={handleRemoveTask}
+              onPendingChange={handlePendingChange}
               disabled={submitMutation.isMutating || reopenMutation.isMutating}
             />
           ))}
@@ -474,31 +502,53 @@ export const WeeklyDetailView = ({
           )}
 
           {isEditable && (
-            <Button
-              onClick={() => submitMutation.execute()}
-              disabled={submitMutation.isMutating || weekly.tasks.length === 0}
-              className="gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-            >
-              {weekly.status === 'REJEITADA' ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>
-                    {submitMutation.isMutating
-                      ? 'Reenviando...'
-                      : 'Reenviar Weekly Corrigida'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>
-                    {submitMutation.isMutating
-                      ? 'Enviando...'
-                      : 'Enviar Weekly'}
-                  </span>
-                </>
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+              {hasPendingTaskChanges && (
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  Salve as alterações pendentes antes de enviar
+                </span>
               )}
-            </Button>
+              <Button
+                onClick={() => {
+                  if (hasPendingTaskChanges) {
+                    showAlertDialog({
+                      type: 'warning',
+                      title: 'Alterações pendentes',
+                      message:
+                        'Salve as alterações pendentes nas tarefas antes de enviar o relatório.',
+                    });
+                    return;
+                  }
+                  submitMutation.execute();
+                }}
+                disabled={
+                  submitMutation.isMutating ||
+                  weekly.tasks.length === 0 ||
+                  hasPendingTaskChanges
+                }
+                className="gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              >
+                {weekly.status === 'REJEITADA' ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>
+                      {submitMutation.isMutating
+                        ? 'Reenviando...'
+                        : 'Reenviar Weekly Corrigida'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>
+                      {submitMutation.isMutating
+                        ? 'Enviando...'
+                        : 'Enviar Weekly'}
+                    </span>
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </div>
       )}
