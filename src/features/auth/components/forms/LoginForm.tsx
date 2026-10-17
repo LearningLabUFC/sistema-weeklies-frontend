@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import InputGroup from '@/components/shared/InputGroup/InputGroup';
 import { Button } from '@/components/ui/button';
+import { isAdminRole } from '@/config/roles';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -35,8 +36,12 @@ const LoginForm = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await login(data.email, data.password);
-      navigate('/', { replace: true });
+      const loggedUser = await login(data.email, data.password);
+      if (isAdminRole(loggedUser?.global_role)) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (error) {
       if (error instanceof Error) {
         showAlertDialog({

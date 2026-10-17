@@ -13,8 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { images } from '@/config/images';
-import { ROLE_LABELS } from '@/config/roles';
+import { isAdminRole, ROLE_LABELS } from '@/config/roles';
 import ChangePasswordForm from '@/features/auth/components/forms/ChangePasswordForm';
+import { WarningsList } from '@/features/weeklies/components/WarningsList';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { api } from '@/lib/api';
 
@@ -337,6 +338,15 @@ const Profile = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Seção de Advertências Pessoais (A01) — apenas membros e líderes */}
+      {!isAdminRole(profileData?.global_role) && (
+        <Card className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-xs">
+          <CardContent className="p-6">
+            <WarningsList mode="me" />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

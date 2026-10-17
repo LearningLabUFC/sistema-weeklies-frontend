@@ -27,3 +27,17 @@ export const ROLE_NAME_COLORS: Record<string, string> = {
   lider:
     'bg-[#FFBF00]/10 text-[#D49E00] border-[#FFBF00]/20 dark:text-[#FFBF00]',
 };
+
+/**
+ * Retorna true se o cargo global do usuário for Administrador ou Super Administrador (Coordenadora).
+ */
+export function isAdminRole(roleId?: string | null): boolean {
+  return roleId === ROLE_IDS.ADMIN || roleId === ROLE_IDS.SUPER_ADMIN;
+}
+
+/**
+ * Retorna true se o cargo global do usuário for Super Administrador (Coordenadora).
+ */
+export function isSuperAdminRole(roleId?: string | null): boolean {
+  return roleId === ROLE_IDS.SUPER_ADMIN;
+}

@@ -264,7 +264,6 @@ export function UserDetailsModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="usuario">Usuário</SelectItem>
-                      <SelectItem value="lider">Líder</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
                       {/* Essa opção aparece automaticamente se isSuperAdmin for verdadeiro no seu useAuth */}
                       {isSuperAdmin && (
