@@ -1,5 +1,5 @@
 import { FileText } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { isAdminRole } from '@/config/roles';
+import { AuthContext } from '@/features/auth/context/AuthContext';
 import { useSectorContext } from '@/features/sectors/context/useSectorContext';
 import { tasksApi } from '@/features/weeklies/api/tasksApi';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
@@ -41,10 +43,12 @@ function TaskModalContent({
   defaultSectorId,
   onSuccess,
 }: Omit<TaskModalProps, 'isOpen'>) {
+  const authContext = useContext(AuthContext);
   const { showAlertDialog } = useAlertDialog();
   const { mySectors } = useSectorContext();
 
   const isEditing = Boolean(taskToEdit);
+  const isAdmin = isAdminRole(authContext?.user?.global_role);
 
   const [setorId, setSetorId] = useState(() => {
     if (taskToEdit?.setor_id) return taskToEdit.setor_id;
@@ -53,6 +57,12 @@ function TaskModalContent({
     }
     return mySectors.length > 0 ? mySectors[0].id : '';
   });
+
+  const currentTaskSectorId = taskToEdit?.setor_id || setorId;
+  const isLeaderOfSector = mySectors.some(
+    s => s.id === currentTaskSectorId && s.papel === 'lider',
+  );
+  const canEditPrazo = !isEditing || isAdmin || isLeaderOfSector;
 
   // Atualiza setorId quando mySectors ou defaultSectorId carregarem
   useEffect(() => {
@@ -90,8 +100,9 @@ function TaskModalContent({
           descricao: descricao.trim() ? descricao.trim() : null,
         });
 
-        // Se o prazo foi alterado e a task ainda é PENDENTE, chama T04
+        // Se o prazo foi alterado, a task ainda é PENDENTE e o usuário possui autorização de líder/admin, chama T04
         if (
+          canEditPrazo &&
           prazoConclusao &&
           prazoConclusao !== (taskToEdit.prazo_conclusao || '')
         ) {
@@ -233,11 +244,15 @@ function TaskModalContent({
                   type="date"
                   value={prazoConclusao}
                   onChange={e => setPrazoConclusao(e.target.value)}
-                  disabled={saveMutation.isMutating}
+                  disabled={
+                    saveMutation.isMutating || (isEditing && !canEditPrazo)
+                  }
                 />
               </div>
               <p className="text-[11px] text-slate-400">
-                Se omitido, o sistema calculará o prazo padrão configurado.
+                {isEditing && !canEditPrazo
+                  ? 'Apenas o líder do setor ou administrador pode alterar o prazo de uma tarefa existente.'
+                  : 'Se omitido, o sistema calculará o prazo padrão configurado.'}
               </p>
             </div>
           </div>
