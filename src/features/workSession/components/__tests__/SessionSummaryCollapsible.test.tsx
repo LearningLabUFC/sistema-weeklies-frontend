@@ -69,7 +69,6 @@ describe('SessionSummaryCollapsible Component', () => {
     });
   });
 
-
   it('deve alternar para filtro de mês e buscar novo resumo', async () => {
     vi.mocked(workSessionService.getSummary).mockResolvedValue(mockSummary);
 
@@ -114,7 +113,6 @@ describe('SessionSummaryCollapsible Component', () => {
     });
   });
 
-
   it('deve exibir indicador de "Meta atingida!" quando ultrapassar ou igualar 100%', async () => {
     const metaAtingidaSummary: WorkSessionSummaryResponse = {
       ...mockSummary,
@@ -132,5 +130,4 @@ describe('SessionSummaryCollapsible Component', () => {
       expect(screen.getByText('Meta atingida!')).toBeInTheDocument();
     });
   });
-
 });

@@ -207,7 +207,6 @@ describe('workSessionService', () => {
       expect(result).toEqual(sessionDetail);
     });
 
-
     it('deve propagar erro 404 quando a sessão não for encontrada', async () => {
       const errorResponse = {
         response: {
