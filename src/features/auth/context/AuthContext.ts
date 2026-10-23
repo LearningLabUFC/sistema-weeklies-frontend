@@ -5,7 +5,7 @@ import type { RegisterData, User } from '@/types/user';
 export interface AuthContextData {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, senha: string) => Promise<void>;
+  login: (email: string, senha: string) => Promise<User>;
   registerUser: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;

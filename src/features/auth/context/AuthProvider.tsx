@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [loading, setLoading] = useState(false);
 
-  const login = async (email: string, senha: string) => {
+  const login = async (email: string, senha: string): Promise<User> => {
     try {
       setLoading(true);
       const response = await api.post('/auth/login', { email, senha });
@@ -33,8 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('@LearningLab:user', JSON.stringify(usuario));
 
       setUser(usuario);
+      return usuario;
     } catch (error) {
       handleAuthError(error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -93,6 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('@LearningLab:token');
       localStorage.removeItem('@LearningLab:refreshToken');
       localStorage.removeItem('@LearningLab:user');
+      localStorage.removeItem('@LearningLab:selectedSector');
+      try {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('@LearningLab:selectedSector')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch {
+        // Ignora erros de localStorage
+      }
       setUser(null);
     }
   };

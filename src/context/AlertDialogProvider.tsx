@@ -5,7 +5,13 @@ import {
   Info,
   XCircle,
 } from 'lucide-react';
-import React, { type ReactNode, useCallback, useState } from 'react';
+import React, {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   AlertDialog,
@@ -35,6 +41,15 @@ const iconMap: Record<AlertType, React.ReactNode> = {
 export function AlertDialogProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<AlertOptions | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const showAlertDialog = useCallback((newOptions: AlertOptions) => {
     setOptions(newOptions);
@@ -43,7 +58,14 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
 
   const hideAlertDialog = useCallback(() => {
     setIsOpen(false);
-    setTimeout(() => setOptions(null), 300);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        setOptions(null);
+      }
+    }, 300);
   }, []);
 
   const handleConfirm = () => {

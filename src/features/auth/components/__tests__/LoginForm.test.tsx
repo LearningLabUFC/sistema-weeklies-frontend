@@ -2,9 +2,19 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ROLE_IDS } from '@/config/roles';
 import LoginForm from '@/features/auth/components/forms/LoginForm';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAuth } from '@/hooks/useAuth';
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(),
@@ -104,6 +114,54 @@ describe('LoginForm Component', () => {
           message: 'Credenciais inválidas',
         }),
       );
+    });
+  });
+
+  it('deve redirecionar para /admin quando o usuário for coordenador ou admin', async () => {
+    mockLogin.mockResolvedValueOnce({
+      id: 'admin-1',
+      nome_completo: 'Coordenadora Geral',
+      email: 'coord@ufc.br',
+      global_role: ROLE_IDS.SUPER_ADMIN,
+    });
+
+    renderComponent();
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'coord@ufc.br' },
+    });
+    fireEvent.change(screen.getByLabelText(/senha/i), {
+      target: { value: 'senhaSegura123' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/admin', { replace: true });
+    });
+  });
+
+  it('deve redirecionar para / quando o usuário for membro comum', async () => {
+    mockLogin.mockResolvedValueOnce({
+      id: 'user-1',
+      nome_completo: 'Membro Teste',
+      email: 'membro@ufc.br',
+      global_role: ROLE_IDS.USUARIO,
+    });
+
+    renderComponent();
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'membro@ufc.br' },
+    });
+    fireEvent.change(screen.getByLabelText(/senha/i), {
+      target: { value: 'senhaSegura123' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
     });
   });
 });
