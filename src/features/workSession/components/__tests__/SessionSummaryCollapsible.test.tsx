@@ -215,6 +215,8 @@ describe('SessionSummaryCollapsible Component', () => {
           criado_em: '',
           atualizado_em: '',
           ativo: true,
+          qtd_membros: 0,
+          qtd_lideres: 0,
         },
         {
           id: 'setor-mkt',
@@ -223,6 +225,8 @@ describe('SessionSummaryCollapsible Component', () => {
           criado_em: '',
           atualizado_em: '',
           ativo: true,
+          qtd_membros: 0,
+          qtd_lideres: 0,
         },
       ],
       mySectors: [],
@@ -268,6 +272,8 @@ describe('SessionSummaryCollapsible Component', () => {
           criado_em: '',
           atualizado_em: '',
           ativo: true,
+          qtd_membros: 0,
+          qtd_lideres: 0,
         },
         {
           id: 'setor-design',
@@ -276,6 +282,8 @@ describe('SessionSummaryCollapsible Component', () => {
           criado_em: '',
           atualizado_em: '',
           ativo: true,
+          qtd_membros: 0,
+          qtd_lideres: 0,
         },
       ],
       mySectors: [
@@ -285,6 +293,7 @@ describe('SessionSummaryCollapsible Component', () => {
           descricao: '',
           papel: 'membro' as const,
           criado_em: '',
+          ativo: true,
         },
       ],
       isMemberOf: vi.fn(),

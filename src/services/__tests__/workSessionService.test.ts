@@ -8,6 +8,8 @@ import type {
   GetMetricsSummaryParams,
   GetMetricsTimelineParams,
   GetMetricsUsersParams,
+  GetWorkSessionsParams,
+  GetWorkSessionSummaryParams,
   MetricsSectorsResponse,
   MetricsSummaryResponse,
   MetricsTimelineResponse,

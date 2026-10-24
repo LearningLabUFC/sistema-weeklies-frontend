@@ -293,6 +293,8 @@ describe('SessionHistoryCollapsible Component', () => {
           criado_em: '',
           atualizado_em: '',
           ativo: true,
+          qtd_membros: 0,
+          qtd_lideres: 0,
         },
       ],
       mySectors: [],
@@ -356,6 +358,8 @@ describe('SessionHistoryCollapsible Component', () => {
           criado_em: '',
           atualizado_em: '',
           ativo: true,
+          qtd_membros: 0,
+          qtd_lideres: 0,
         },
         {
           id: 'setor-alheio',
@@ -364,6 +368,8 @@ describe('SessionHistoryCollapsible Component', () => {
           criado_em: '',
           atualizado_em: '',
           ativo: true,
+          qtd_membros: 0,
+          qtd_lideres: 0,
         },
       ],
       mySectors: [], // Atualmente desvinculado

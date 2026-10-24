@@ -182,6 +182,8 @@ function StatusBadge({ status }: { status: WorkSessionStatus }) {
 interface SessionHistoryCollapsibleProps {
   refreshTrigger?: number;
   initialUserId?: string;
+  initialSectorId?: string;
+  initialOpen?: boolean;
 }
 
 type QuickFilter = 'all' | 'week' | 'month' | 'custom';
@@ -189,6 +191,8 @@ type QuickFilter = 'all' | 'week' | 'month' | 'custom';
 export const SessionHistoryCollapsible = ({
   refreshTrigger = 0,
   initialUserId,
+  initialSectorId,
+  initialOpen = false,
 }: SessionHistoryCollapsibleProps) => {
   const authContext = useContext(AuthContext);
   const user = authContext?.user;
@@ -203,7 +207,7 @@ export const SessionHistoryCollapsible = ({
     [sectorContext?.mySectors],
   );
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [sessions, setSessions] = useState<WorkSession[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
   const [page, setPage] = useState(1);
@@ -216,7 +220,9 @@ export const SessionHistoryCollapsible = ({
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedSectorId, setSelectedSectorId] = useState<string>('all');
+  const [selectedSectorId, setSelectedSectorId] = useState<string>(
+    initialSectorId || 'all',
+  );
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedUserId, setSelectedUserId] = useState<string>(
     initialUserId || '',
