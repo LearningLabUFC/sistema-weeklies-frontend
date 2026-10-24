@@ -6,8 +6,10 @@ import {
   Coffee,
   Hourglass,
   Info,
+  Layers,
   Pause as PauseIcon,
   Play,
+  PlusCircle,
   RotateCcw,
   Square,
   Timer as TimerIcon,
@@ -35,7 +37,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useSectorContext } from '@/features/sectors/context/useSectorContext';
+import { cn } from '@/lib/utils';
 import { workSessionService } from '@/services/workSessionService';
 import type { Pause, WorkSessionDetail } from '@/types/workSession';
 
@@ -130,11 +141,42 @@ interface TimeClockTrackerProps {
 export const TimeClockTracker = ({
   onSessionEnded,
 }: TimeClockTrackerProps = {}) => {
+  const {
+    mySectors,
+    sectors,
+    selectedSectorId: contextSectorId,
+  } = useSectorContext();
+
   const [session, setSession] = useState<WorkSessionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
   const [seconds, setSeconds] = useState(0);
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
+
+  // Setor selecionado manualmente pelo usuário
+  const [userSelectedSectorId, setUserSelectedSectorId] = useState<
+    string | null
+  >(null);
+
+  // Setores ativos do usuário disponíveis para registrar ponto
+  const activeSectors = useMemo(() => {
+    return mySectors.filter(s => s.ativo !== false);
+  }, [mySectors]);
+
+  // Setor efetivo derivado: seleção manual válida, setor do contexto global ou primeiro ativo
+  const selectedSectorId = useMemo(() => {
+    if (
+      userSelectedSectorId &&
+      activeSectors.some(s => s.id === userSelectedSectorId)
+    ) {
+      return userSelectedSectorId;
+    }
+    if (contextSectorId && activeSectors.some(s => s.id === contextSectorId)) {
+      return contextSectorId;
+    }
+    return activeSectors[0]?.id || '';
+  }, [userSelectedSectorId, activeSectors, contextSectorId]);
 
   // Busca a sessão atual no backend
   const fetchCurrentSession = useCallback(async () => {
@@ -190,16 +232,45 @@ export const TimeClockTracker = ({
     return () => clearInterval(interval);
   }, [session]);
 
+  // Relógio do componente para checagens temporais
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Encontra pausa em aberto se houver
   const openPause = useMemo<Pause | undefined>(() => {
     return session?.pausas?.find(p => !p.fim_em);
   }, [session]);
 
+  // Nome do setor contabilizado na sessão atual
+  const currentSectorName = useMemo(() => {
+    if (!session?.setor_id) return null;
+    const found =
+      mySectors.find(s => s.id === session.setor_id) ||
+      sectors.find(s => s.id === session.setor_id);
+    return found?.nome || null;
+  }, [session, mySectors, sectors]);
+
   const handleStartSession = async () => {
+    if (!selectedSectorId) {
+      setFeedback({
+        type: 'error',
+        title: 'Setor obrigatório',
+        description:
+          'Selecione um setor ativo para iniciar a contagem de horas.',
+      });
+      return;
+    }
+
     setFeedback(null);
     setIsActionLoading(true);
     try {
-      const newSession = await workSessionService.startSession();
+      const newSession =
+        await workSessionService.startSession(selectedSectorId);
       setSession({
         ...newSession,
         pausas: [],
@@ -327,6 +398,41 @@ export const TimeClockTracker = ({
     }
   };
 
+  const handleContinueSession = async () => {
+    if (!session) return;
+    setFeedback(null);
+    setIsActionLoading(true);
+
+    try {
+      const prorrogada = await workSessionService.continueSession(session.id);
+      setSession(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          expira_em: prorrogada.expira_em,
+        };
+      });
+      setFeedback({
+        type: 'success',
+        title: 'Jornada prorrogada!',
+        description: `Horário de expiração estendido em +2 horas (novo limite: ${formatTime(
+          prorrogada.expira_em,
+        )}).`,
+      });
+    } catch (err: unknown) {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail || 'Erro ao prorrogar sessão.';
+      setFeedback({
+        type: 'error',
+        title: 'Atenção',
+        description: detail,
+      });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-12 gap-3 text-muted-foreground">
@@ -341,6 +447,14 @@ export const TimeClockTracker = ({
   const isSessionActive = session?.status === 'ATIVA';
   const isSessionPaused = session?.status === 'EM_PAUSA';
   const hasOpenSession = isSessionActive || isSessionPaused;
+
+  const msUntilExpiration = session
+    ? new Date(session.expira_em).getTime() - currentTimeMs
+    : 0;
+  const isNearExpiration =
+    hasOpenSession &&
+    msUntilExpiration > 0 &&
+    msUntilExpiration <= 10 * 60 * 1000;
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -379,7 +493,16 @@ export const TimeClockTracker = ({
             </CardDescription>
           </div>
 
-          <div>
+          <div className="flex items-center gap-2">
+            {hasOpenSession && currentSectorName && (
+              <Badge
+                variant="outline"
+                className="font-medium bg-muted/60 border-primary/20 text-foreground flex items-center gap-1"
+              >
+                <Layers className="size-3 text-primary" />
+                {currentSectorName}
+              </Badge>
+            )}
             {isSessionActive && (
               <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1 font-semibold animate-pulse">
                 <span className="size-2 rounded-full bg-emerald-500 mr-1.5 inline-block" />
@@ -427,13 +550,53 @@ export const TimeClockTracker = ({
             )}
           </div>
 
+          {/* Seletor de Setor (somente quando não houver sessão aberta) */}
+          {!hasOpenSession && (
+            <div className="w-full max-w-xs flex flex-col gap-1.5">
+              <label
+                htmlFor="sector-select"
+                className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"
+              >
+                <Layers className="size-3.5 text-primary" />
+                Setor de Atuação
+              </label>
+              {activeSectors.length > 0 ? (
+                <Select
+                  value={selectedSectorId}
+                  onValueChange={setUserSelectedSectorId}
+                  disabled={isActionLoading}
+                >
+                  <SelectTrigger id="sector-select" className="w-full h-10">
+                    <SelectValue placeholder="Selecione um setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeSectors.map(sec => (
+                      <SelectItem key={sec.id} value={sec.id}>
+                        {sec.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="p-3 border rounded-lg bg-muted/40 text-xs text-muted-foreground text-center">
+                  Você não está vinculado a nenhum setor ativo no momento.
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Botões de Ação */}
           <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-md">
             {/* Botão Iniciar (Entrada) */}
             <Button
               size="lg"
               onClick={handleStartSession}
-              disabled={hasOpenSession || isActionLoading}
+              disabled={
+                hasOpenSession ||
+                isActionLoading ||
+                !selectedSectorId ||
+                activeSectors.length === 0
+              }
               className="flex-1 min-w-[130px] font-semibold h-11"
             >
               {isActionLoading && !hasOpenSession ? (
@@ -510,7 +673,22 @@ export const TimeClockTracker = ({
 
       {/* Painel de Detalhes da Sessão */}
       {hasOpenSession && session && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-border/60">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-medium flex items-center gap-1.5">
+                <Layers className="size-3.5" />
+                Setor
+              </CardDescription>
+              <CardTitle className="text-lg font-bold truncate">
+                {currentSectorName || 'Setor vinculado'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 text-xs text-muted-foreground">
+              Horas contabilizadas para este setor
+            </CardContent>
+          </Card>
+
           <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardDescription className="text-xs uppercase font-medium flex items-center gap-1.5">
@@ -526,18 +704,51 @@ export const TimeClockTracker = ({
             </CardContent>
           </Card>
 
-          <Card className="border-border/60">
+          <Card
+            className={cn(
+              'border-border/60 transition-colors',
+              isNearExpiration &&
+                'border-amber-500/50 bg-amber-500/5 dark:bg-amber-500/10',
+            )}
+          >
             <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase font-medium flex items-center gap-1.5">
-                <Hourglass className="size-3.5" />
-                Limite Automático
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-xs uppercase font-medium flex items-center gap-1.5">
+                  <Hourglass className="size-3.5" />
+                  Limite Automático
+                </CardDescription>
+                {isNearExpiration && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 px-1.5 py-0"
+                  >
+                    Expira em breve
+                  </Badge>
+                )}
+              </div>
               <CardTitle className="text-2xl font-bold">
                 {formatTime(session.expira_em)}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0 text-xs text-muted-foreground">
-              Expiração automática (máx. 8 horas)
+            <CardContent className="pt-0 flex flex-col gap-2">
+              <div className="text-xs text-muted-foreground">
+                Expiração automática (+2h)
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant={isNearExpiration ? 'default' : 'outline'}
+                className="w-full text-xs font-semibold h-7"
+                onClick={handleContinueSession}
+                disabled={isActionLoading}
+              >
+                {isActionLoading ? (
+                  <Spinner className="mr-1.5 size-3" />
+                ) : (
+                  <PlusCircle className="mr-1.5 size-3" />
+                )}
+                Prorrogar (+2h)
+              </Button>
             </CardContent>
           </Card>
 
