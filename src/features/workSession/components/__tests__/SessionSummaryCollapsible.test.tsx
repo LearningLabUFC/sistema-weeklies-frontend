@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { SectorContext } from '@/features/sectors/context/sectorContextDef';
 import { SessionSummaryCollapsible } from '@/features/workSession/components/SessionSummaryCollapsible';
 import { useAuth } from '@/hooks/useAuth';
 import { workSessionService } from '@/services/workSessionService';
@@ -69,6 +70,77 @@ describe('SessionSummaryCollapsible Component', () => {
     });
   });
 
+  it('deve repassar setor_id quando fornecido initialSectorId', async () => {
+    vi.mocked(workSessionService.getSummary).mockResolvedValueOnce({
+      ...mockSummary,
+      setor_id: 'setor-dev',
+    });
+
+    render(<SessionSummaryCollapsible initialSectorId="setor-dev" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /resumo de horas/i }));
+
+    await waitFor(() => {
+      expect(workSessionService.getSummary).toHaveBeenCalledWith(
+        expect.objectContaining({
+          setor_id: 'setor-dev',
+        }),
+      );
+    });
+  });
+
+  it('deve permitir que líder/admin filtre por usuário específico', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: {
+        id: 'admin-1',
+        nome_completo: 'Admin Teste',
+        email: 'admin@learninglab.com',
+        matricula: '999999',
+        data_nascimento: '1990-01-01',
+        data_ingresso: '2020-01-01',
+        meta_horas_semanais: 0,
+        foto_perfil: '',
+        curso_id: 'curso-1',
+        status_id: 'ativo-1',
+        global_role: 'admin',
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      registerUser: vi.fn(),
+      loading: false,
+      isAuthenticated: true,
+      checkUserStatus: vi.fn(),
+    });
+
+    vi.mocked(workSessionService.getSummary).mockResolvedValue(mockSummary);
+
+    render(<SessionSummaryCollapsible />);
+
+    fireEvent.click(screen.getByRole('button', { name: /resumo de horas/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByPlaceholderText(
+          /uuid do usuário ou deixe vazio para você/i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    const userInput = screen.getByPlaceholderText(
+      /uuid do usuário ou deixe vazio para você/i,
+    );
+    fireEvent.change(userInput, { target: { value: 'colaborador-uuid' } });
+    fireEvent.click(screen.getByRole('button', { name: /^filtrar$/i }));
+
+    await waitFor(() => {
+      expect(workSessionService.getSummary).toHaveBeenCalledWith(
+        expect.objectContaining({
+          usuario_id: 'colaborador-uuid',
+        }),
+      );
+    });
+  });
+
   it('deve alternar para filtro de mês e buscar novo resumo', async () => {
     vi.mocked(workSessionService.getSummary).mockResolvedValue(mockSummary);
 
@@ -129,5 +201,124 @@ describe('SessionSummaryCollapsible Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Meta atingida!')).toBeInTheDocument();
     });
+  });
+
+  it('não deve vazar setores da organização para membro comum sem setores vinculados', async () => {
+    vi.mocked(workSessionService.getSummary).mockResolvedValue(mockSummary);
+
+    const mockSectorContextValue = {
+      sectors: [
+        {
+          id: 'setor-dev',
+          nome: 'Desenvolvimento',
+          descricao: '',
+          criado_em: '',
+          atualizado_em: '',
+          ativo: true,
+        },
+        {
+          id: 'setor-mkt',
+          nome: 'Marketing',
+          descricao: '',
+          criado_em: '',
+          atualizado_em: '',
+          ativo: true,
+        },
+      ],
+      mySectors: [],
+      isMemberOf: vi.fn(),
+      getMyRole: vi.fn(),
+      selectedSectorId: null,
+      selectedSectorName: null,
+      selectedSector: null,
+      selectSector: vi.fn(),
+      setSelectedSectorId: vi.fn(),
+      clearSelectedSector: vi.fn(),
+      isLoading: false,
+      refreshSectors: vi.fn(),
+    };
+
+    render(
+      <SectorContext.Provider value={mockSectorContextValue}>
+        <SessionSummaryCollapsible />
+      </SectorContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /resumo de horas/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Nenhum setor vinculado')).toBeInTheDocument();
+      expect(screen.queryByText('Desenvolvimento')).not.toBeInTheDocument();
+      expect(screen.queryByText('Marketing')).not.toBeInTheDocument();
+    });
+
+    const trigger = screen.getByRole('combobox');
+    expect(trigger).toBeDisabled();
+  });
+
+  it('deve permitir filtrar estritamente pelos setores vinculados ao membro', async () => {
+    vi.mocked(workSessionService.getSummary).mockResolvedValue(mockSummary);
+
+    const mockSectorContextValue = {
+      sectors: [
+        {
+          id: 'setor-dev',
+          nome: 'Desenvolvimento',
+          descricao: '',
+          criado_em: '',
+          atualizado_em: '',
+          ativo: true,
+        },
+        {
+          id: 'setor-design',
+          nome: 'Design UI/UX',
+          descricao: '',
+          criado_em: '',
+          atualizado_em: '',
+          ativo: true,
+        },
+      ],
+      mySectors: [
+        {
+          id: 'setor-design',
+          nome: 'Design UI/UX',
+          descricao: '',
+          papel: 'membro' as const,
+          criado_em: '',
+        },
+      ],
+      isMemberOf: vi.fn(),
+      getMyRole: vi.fn(),
+      selectedSectorId: null,
+      selectedSectorName: null,
+      selectedSector: null,
+      selectSector: vi.fn(),
+      setSelectedSectorId: vi.fn(),
+      clearSelectedSector: vi.fn(),
+      isLoading: false,
+      refreshSectors: vi.fn(),
+    };
+
+    render(
+      <SectorContext.Provider value={mockSectorContextValue}>
+        <SessionSummaryCollapsible />
+      </SectorContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /resumo de horas/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).not.toBeDisabled();
+    });
+
+    const trigger = screen.getByRole('combobox');
+    fireEvent.click(trigger);
+
+    expect(
+      await screen.findByRole('option', { name: 'Design UI/UX' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('option', { name: 'Desenvolvimento' }),
+    ).not.toBeInTheDocument();
   });
 });

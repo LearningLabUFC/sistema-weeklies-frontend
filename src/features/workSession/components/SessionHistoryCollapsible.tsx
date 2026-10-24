@@ -2,22 +2,41 @@ import {
   AlertCircle,
   Calendar,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
+  Eye,
   Filter,
   History,
+  Layers,
   RotateCcw,
   Timer,
+  User as UserIcon,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { AuthContext } from '@/features/auth/context/AuthContext';
+import { SectorContext } from '@/features/sectors/context/sectorContextDef';
+import { SessionDetailModal } from '@/features/workSession/components/SessionDetailModal';
 import { workSessionService } from '@/services/workSessionService';
-import type { WorkSession, WorkSessionStatus } from '@/types/workSession';
+import type {
+  GetWorkSessionsParams,
+  WorkSession,
+  WorkSessionStatus,
+} from '@/types/workSession';
 
 /**
  * Formata segundos no formato HH:MM:SS ou Xh Ym
@@ -162,30 +181,110 @@ function StatusBadge({ status }: { status: WorkSessionStatus }) {
 
 interface SessionHistoryCollapsibleProps {
   refreshTrigger?: number;
+  initialUserId?: string;
 }
 
 type QuickFilter = 'all' | 'week' | 'month' | 'custom';
 
 export const SessionHistoryCollapsible = ({
   refreshTrigger = 0,
+  initialUserId,
 }: SessionHistoryCollapsibleProps) => {
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user;
+
+  const sectorContext = useContext(SectorContext);
+  const sectors = useMemo(
+    () => sectorContext?.sectors ?? [],
+    [sectorContext?.sectors],
+  );
+  const mySectors = useMemo(
+    () => sectorContext?.mySectors ?? [],
+    [sectorContext?.mySectors],
+  );
+
   const [isOpen, setIsOpen] = useState(false);
   const [sessions, setSessions] = useState<WorkSession[]>([]);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filtros de data
+  // Filtros
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedSectorId, setSelectedSectorId] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedUserId, setSelectedUserId] = useState<string>(
+    initialUserId || '',
+  );
+
+  // Modal de detalhes da sessão
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null,
+  );
 
   // Limite inferior (Maio de 2020) e superior dinâmico (data atual)
   const MIN_DATE = '2020-05-01';
   const maxDate = toDateInputValue(new Date());
 
+  const isAdmin =
+    user?.global_role === 'admin' || user?.global_role === 'super_admin';
+
+  const isLeader = mySectors.some(s => s.papel === 'lider');
+
+  const isAdminOrLeader = isAdmin || isLeader;
+
+  // Setores disponíveis:
+  // Administradores: todos os setores da organização.
+  // Membros comuns e líderes: setores vinculados ativos (mySectors) + qualquer setor histórico onde o usuário já tenha registrado sessões.
+  // Se não possuir vínculo nem histórico, a lista fica vazia (não vaza os demais setores da empresa).
+  const availableSectors = useMemo(() => {
+    if (isAdmin) {
+      return sectors.length > 0 ? sectors : mySectors;
+    }
+
+    const map = new Map<string, { id: string; nome: string }>();
+
+    // 1. Setores vinculados atualmente
+    for (const s of mySectors) {
+      map.set(s.id, { id: s.id, nome: s.nome });
+    }
+
+    // 2. Setores com sessões de trabalho registradas no histórico do usuário
+    for (const session of sessions) {
+      if (session.setor_id && !map.has(session.setor_id)) {
+        const found = sectors.find(sec => sec.id === session.setor_id);
+        map.set(session.setor_id, {
+          id: session.setor_id,
+          nome: found?.nome || 'Setor Anterior',
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  }, [isAdmin, sectors, mySectors, sessions]);
+
+  const getSectorName = (setorId?: string): string => {
+    if (!setorId) return 'Setor Geral';
+    const found =
+      mySectors.find(s => s.id === setorId) ||
+      sectors.find(s => s.id === setorId);
+    return found?.nome || 'Setor vinculado';
+  };
+
   const fetchHistory = useCallback(
-    async (overrideStart?: string, overrideEnd?: string) => {
+    async (
+      targetPage: number = 1,
+      overrideStart?: string,
+      overrideEnd?: string,
+      overrideSector?: string,
+      overrideStatus?: string,
+      overrideUser?: string,
+    ) => {
       try {
         setIsLoading(true);
         setError(null);
@@ -193,10 +292,19 @@ export const SessionHistoryCollapsible = ({
         const currentStart =
           overrideStart !== undefined ? overrideStart : startDate;
         const currentEnd = overrideEnd !== undefined ? overrideEnd : endDate;
+        const currentSector =
+          overrideSector !== undefined ? overrideSector : selectedSectorId;
+        const currentStatus =
+          overrideStatus !== undefined ? overrideStatus : selectedStatus;
+        const currentUser =
+          overrideUser !== undefined ? overrideUser : selectedUserId;
 
-        const params: { inicio?: string; fim?: string } = {};
+        const params: GetWorkSessionsParams = {
+          pagina: targetPage,
+          limite: pageSize,
+        };
 
-        // No contrato da API, início e fim no histórico devem ser enviados juntos
+        // No contrato da API, início e fim no histórico devem ser informados juntos
         if (currentStart && currentEnd) {
           if (new Date(currentStart) > new Date(currentEnd)) {
             setError('A data inicial deve ser anterior ou igual à data final.');
@@ -207,13 +315,22 @@ export const SessionHistoryCollapsible = ({
           params.fim = toIsoBoundary(currentEnd, true);
         }
 
+        if (currentSector && currentSector !== 'all') {
+          params.setor_id = currentSector;
+        }
+
+        if (currentStatus && currentStatus !== 'all') {
+          params.status = currentStatus as WorkSessionStatus;
+        }
+
+        if (currentUser && currentUser.trim() !== '') {
+          params.usuario_id = currentUser.trim();
+        }
+
         const data = await workSessionService.getHistory(params);
-        // Ordena pelas mais recentes primeiro
-        const sorted = (data.sessoes || []).sort(
-          (a, b) =>
-            new Date(b.entrada_em).getTime() - new Date(a.entrada_em).getTime(),
-        );
-        setSessions(sorted);
+        setSessions(data.sessoes || []);
+        setTotalSessions(data.total ?? (data.sessoes || []).length);
+        setPage(data.pagina ?? targetPage);
         setHasLoaded(true);
       } catch (err: unknown) {
         const detail =
@@ -224,7 +341,14 @@ export const SessionHistoryCollapsible = ({
         setIsLoading(false);
       }
     },
-    [startDate, endDate],
+    [
+      startDate,
+      endDate,
+      selectedSectorId,
+      selectedStatus,
+      selectedUserId,
+      pageSize,
+    ],
   );
 
   // Sincronização reativa quando uma nova sessão é finalizada
@@ -234,7 +358,7 @@ export const SessionHistoryCollapsible = ({
     if (refreshTrigger > 0 && isOpen) {
       const reload = async () => {
         if (isMounted) {
-          await fetchHistory();
+          await fetchHistory(page);
         }
       };
       reload();
@@ -243,54 +367,89 @@ export const SessionHistoryCollapsible = ({
     return () => {
       isMounted = false;
     };
-  }, [refreshTrigger, isOpen, fetchHistory]);
+  }, [refreshTrigger, isOpen, fetchHistory, page]);
 
   const handleToggle = () => {
     const nextState = !isOpen;
-
     setIsOpen(nextState);
 
     // Carrega sob demanda na primeira abertura
     if (nextState && !hasLoaded) {
-      fetchHistory();
+      fetchHistory(1);
     }
   };
 
-  // Seletores rápidos de filtro
+  // Seletores rápidos de filtro por período
   const handleSelectQuickFilter = (type: QuickFilter) => {
     setQuickFilter(type);
     setError(null);
+    setPage(1);
 
     if (type === 'all') {
       setStartDate('');
       setEndDate('');
-      fetchHistory('', '');
+      fetchHistory(1, '', '');
     } else if (type === 'week') {
       const range = getCurrentWeekDateRange();
       setStartDate(range.startDate);
       setEndDate(range.endDate);
-      fetchHistory(range.startDate, range.endDate);
+      fetchHistory(1, range.startDate, range.endDate);
     } else if (type === 'month') {
       const range = getCurrentMonthDateRange();
       setStartDate(range.startDate);
       setEndDate(range.endDate);
-      fetchHistory(range.startDate, range.endDate);
+      fetchHistory(1, range.startDate, range.endDate);
     }
   };
 
   const handleApplyCustomFilter = (e: React.FormEvent) => {
     e.preventDefault();
     if (!startDate || !endDate) {
-      setError('Por favor, preencha ambas as datas para filtrar.');
+      setError('Por favor, preencha ambas as datas para filtrar por período.');
       return;
     }
     setQuickFilter('custom');
-    fetchHistory();
+    setPage(1);
+    fetchHistory(1);
+  };
+
+  const handleSectorChange = (value: string) => {
+    setSelectedSectorId(value);
+    setPage(1);
+    fetchHistory(1, undefined, undefined, value);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
+    setPage(1);
+    fetchHistory(1, undefined, undefined, undefined, value);
   };
 
   const handleClearFilter = () => {
-    handleSelectQuickFilter('all');
+    setQuickFilter('all');
+    setStartDate('');
+    setEndDate('');
+    setSelectedSectorId('all');
+    setSelectedStatus('all');
+    setSelectedUserId(initialUserId || '');
+    setError(null);
+    setPage(1);
+    fetchHistory(1, '', '', 'all', 'all', initialUserId || '');
   };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    fetchHistory(newPage);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(totalSessions / pageSize));
+  const hasActiveFilters =
+    quickFilter !== 'all' ||
+    Boolean(startDate) ||
+    Boolean(endDate) ||
+    selectedSectorId !== 'all' ||
+    selectedStatus !== 'all' ||
+    Boolean(selectedUserId && selectedUserId !== initialUserId);
 
   return (
     <div className="w-full mt-4">
@@ -313,7 +472,7 @@ export const SessionHistoryCollapsible = ({
             </span>
             {hasLoaded && (
               <Badge variant="secondary" className="text-xs px-2 py-0">
-                {sessions.length}
+                {totalSessions}
               </Badge>
             )}
           </div>
@@ -326,12 +485,13 @@ export const SessionHistoryCollapsible = ({
         {/* Conteúdo Expandível */}
         {isOpen && (
           <CardContent className="p-4 sm:p-6 pt-3 border-t border-border/40 animate-in fade-in-50 duration-300">
-            {/* Barra de Filtros por Período */}
-            <div className="mb-6 p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3">
+            {/* Barra de Filtros */}
+            <div className="mb-6 p-4 rounded-xl bg-muted/30 border border-border/40 space-y-4">
+              {/* Linha 1: Título e Filtro Rápido de Período */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   <Filter className="size-3.5" />
-                  Filtrar por Período
+                  Filtros de Busca
                 </span>
 
                 {/* Filtros Rápidos (Semana / Mês / Todas) */}
@@ -372,12 +532,68 @@ export const SessionHistoryCollapsible = ({
                 </div>
               </div>
 
-              {/* Inputs de Data Personalizada */}
-              <form
-                onSubmit={handleApplyCustomFilter}
-                className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end pt-1"
-              >
-                <div className="sm:col-span-5 space-y-1">
+              {/* Linha 2: Filtros de Setor, Status e Datas */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1">
+                {/* Filtro por Setor */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                    <Layers className="size-3" /> Setor
+                  </label>
+                  <Select
+                    value={selectedSectorId}
+                    onValueChange={handleSectorChange}
+                    disabled={availableSectors.length === 0}
+                  >
+                    <SelectTrigger className="h-8 text-xs bg-background w-full">
+                      <SelectValue
+                        placeholder={
+                          availableSectors.length === 0
+                            ? 'Nenhum setor vinculado'
+                            : 'Todos os setores'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {availableSectors.length === 0
+                          ? 'Nenhum setor vinculado'
+                          : 'Todos os setores'}
+                      </SelectItem>
+                      {availableSectors.map(s => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtro por Status */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                    <Clock className="size-3" /> Status
+                  </label>
+                  <Select
+                    value={selectedStatus}
+                    onValueChange={handleStatusChange}
+                  >
+                    <SelectTrigger className="h-8 text-xs bg-background w-full">
+                      <SelectValue placeholder="Todos os status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="FINALIZADA">Finalizada</SelectItem>
+                      <SelectItem value="ATIVA">Ativa</SelectItem>
+                      <SelectItem value="EM_PAUSA">Em Pausa</SelectItem>
+                      <SelectItem value="EXPIRADA_SISTEMA">
+                        Expirada (8h)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtro De */}
+                <div className="space-y-1">
                   <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
                     <Calendar className="size-3" /> De
                   </label>
@@ -394,7 +610,8 @@ export const SessionHistoryCollapsible = ({
                   />
                 </div>
 
-                <div className="sm:col-span-5 space-y-1">
+                {/* Filtro Até */}
+                <div className="space-y-1">
                   <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
                     <Calendar className="size-3" /> Até
                   </label>
@@ -410,30 +627,63 @@ export const SessionHistoryCollapsible = ({
                     className="h-8 text-xs bg-background"
                   />
                 </div>
+              </div>
 
-                <div className="sm:col-span-2 flex gap-1.5">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="h-8 flex-1 text-xs font-semibold"
-                    disabled={isLoading || !startDate || !endDate}
+              {/* Linha 3 (Opcional): Se Admin ou Líder, Filtro por ID de Usuário */}
+              {isAdminOrLeader && (
+                <div className="pt-1 flex flex-col sm:flex-row items-end gap-2.5">
+                  <div className="w-full sm:flex-1 space-y-1">
+                    <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                      <UserIcon className="size-3" /> Filtrar por ID do Usuário
+                      (líder/admin)
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="UUID do usuário (deixe vazio para suas sessões)"
+                      value={selectedUserId}
+                      onChange={e => setSelectedUserId(e.target.value)}
+                      className="h-8 text-xs bg-background font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Botões de Ação de Filtro */}
+              <div className="flex items-center justify-between pt-1 border-t border-border/30">
+                <span className="text-[11px] text-muted-foreground">
+                  {hasActiveFilters
+                    ? 'Filtros aplicados'
+                    : 'Sem filtros ativos'}
+                </span>
+                <div className="flex gap-2">
+                  <form
+                    onSubmit={handleApplyCustomFilter}
+                    className="inline-flex"
                   >
-                    Filtrar
-                  </Button>
-                  {(startDate || endDate || quickFilter !== 'all') && (
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-8 text-xs font-semibold px-3"
+                      disabled={isLoading}
+                    >
+                      Aplicar Filtros
+                    </Button>
+                  </form>
+                  {hasActiveFilters && (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={handleClearFilter}
-                      className="h-8 px-2 text-xs"
-                      title="Limpar filtros"
+                      className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                      title="Limpar todos os filtros"
                     >
-                      <RotateCcw className="size-3.5" />
+                      <RotateCcw className="size-3.5 mr-1" />
+                      Limpar
                     </Button>
                   )}
                 </div>
-              </form>
+              </div>
             </div>
 
             {/* Listagem do Histórico */}
@@ -441,7 +691,7 @@ export const SessionHistoryCollapsible = ({
               <div className="flex flex-col items-center justify-center py-10 gap-3 text-muted-foreground">
                 <Spinner className="size-6 animate-spin text-primary" />
                 <span className="text-sm font-medium">
-                  Carregando histórico...
+                  Carregando sessões...
                 </span>
               </div>
             ) : error ? (
@@ -454,7 +704,7 @@ export const SessionHistoryCollapsible = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => fetchHistory()}
+                    onClick={() => fetchHistory(page)}
                   >
                     Tentar novamente
                   </Button>
@@ -467,73 +717,151 @@ export const SessionHistoryCollapsible = ({
                   Nenhuma sessão encontrada para este período
                 </p>
                 <p className="text-xs text-muted-foreground max-w-sm">
-                  {quickFilter !== 'all'
-                    ? 'Tente selecionar outro intervalo de datas ou limpar o filtro.'
+                  {hasActiveFilters
+                    ? 'Tente selecionar outros filtros ou limpar os critérios de busca.'
                     : 'Assim que você registrar e encerrar suas jornadas de trabalho, elas serão exibidas aqui.'}
                 </p>
-                {quickFilter !== 'all' && (
+                {hasActiveFilters && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleClearFilter}
                     className="mt-2 text-xs"
                   >
-                    Ver todas as sessões
+                    Limpar filtros
                   </Button>
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-border/40">
-                {sessions.map(s => (
-                  <div
-                    key={s.id}
-                    className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:bg-muted/20 px-2 rounded-lg transition-colors"
-                  >
-                    {/* Data e Período */}
-                    <div className="flex items-start sm:items-center gap-3">
-                      <div className="p-2 rounded-md bg-muted/60 text-muted-foreground shrink-0 mt-0.5 sm:mt-0">
-                        <Calendar className="size-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 font-medium">
-                          <span>{formatDate(s.entrada_em)}</span>
-                          <StatusBadge status={s.status} />
+              <div className="space-y-4">
+                <div className="divide-y divide-border/40">
+                  {sessions.map(s => (
+                    <div
+                      key={s.id}
+                      className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:bg-muted/20 px-2 rounded-lg transition-colors"
+                    >
+                      {/* Data, Setor e Período */}
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div className="p-2 rounded-md bg-muted/60 text-muted-foreground shrink-0 mt-0.5 sm:mt-0">
+                          <Calendar className="size-4" />
                         </div>
-                        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                        <div>
+                          <div className="flex items-center gap-2 font-medium">
+                            <span>{formatDate(s.entrada_em)}</span>
+                            <StatusBadge status={s.status} />
+                          </div>
+                          <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-1.5 mt-1">
+                            <span className="inline-flex items-center gap-1 font-medium text-foreground/80 bg-muted/60 px-1.5 py-0.5 rounded text-[11px]">
+                              <Layers className="size-3 text-primary" />
+                              {getSectorName(s.setor_id)}
+                            </span>
+                            <span>•</span>
+                            <span>
+                              {formatTime(s.entrada_em)} às{' '}
+                              {s.saida_em
+                                ? formatTime(s.saida_em)
+                                : 'Em aberto'}
+                            </span>
+                            {s.motivo_encerramento && (
+                              <>
+                                <span>•</span>
+                                <span>
+                                  {s.motivo_encerramento === 'MANUAL'
+                                    ? 'Saída manual'
+                                    : 'Limite atingido'}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Duração Trabalhada e Ações */}
+                      <div className="flex items-center gap-2 self-end sm:self-auto pl-11 sm:pl-0">
+                        <div className="flex items-center gap-1.5 font-mono text-sm font-semibold bg-muted/40 px-2.5 py-1 rounded-md">
+                          <Timer className="size-3.5 text-muted-foreground" />
                           <span>
-                            {formatTime(s.entrada_em)} às{' '}
-                            {s.saida_em ? formatTime(s.saida_em) : 'Em aberto'}
+                            {formatDuration(s.tempo_trabalhado_segundos)}
                           </span>
-                          {s.motivo_encerramento && (
-                            <>
-                              <span>•</span>
-                              <span>
-                                {s.motivo_encerramento === 'MANUAL'
-                                  ? 'Saída manual'
-                                  : 'Limite atingido'}
-                              </span>
-                            </>
-                          )}
                         </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedSessionId(s.id)}
+                          className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                          title="Ver detalhes da sessão"
+                        >
+                          <Eye className="size-3.5 mr-1" />
+                          Detalhes
+                        </Button>
                       </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Paginação */}
+                {totalSessions > 0 && (
+                  <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border/40 text-xs text-muted-foreground">
+                    <div>
+                      Exibindo{' '}
+                      <span className="font-semibold text-foreground">
+                        {(page - 1) * pageSize + 1}
+                      </span>{' '}
+                      a{' '}
+                      <span className="font-semibold text-foreground">
+                        {Math.min(page * pageSize, totalSessions)}
+                      </span>{' '}
+                      de{' '}
+                      <span className="font-semibold text-foreground">
+                        {totalSessions}
+                      </span>{' '}
+                      sessões
                     </div>
 
-                    {/* Duração Trabalhada */}
-                    <div className="flex items-center gap-2 self-end sm:self-auto pl-11 sm:pl-0">
-                      <div className="flex items-center gap-1.5 font-mono text-sm font-semibold bg-muted/40 px-2.5 py-1 rounded-md">
-                        <Timer className="size-3.5 text-muted-foreground" />
-                        <span>
-                          {formatDuration(s.tempo_trabalhado_segundos)}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(page - 1)}
+                        disabled={page <= 1 || isLoading}
+                        className="h-8 px-2.5 text-xs"
+                      >
+                        <ChevronLeft className="size-3.5 mr-1" />
+                        Anterior
+                      </Button>
+
+                      <span className="font-medium px-2">
+                        {page} / {totalPages}
+                      </span>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={page >= totalPages || isLoading}
+                        className="h-8 px-2.5 text-xs"
+                      >
+                        Próxima
+                        <ChevronRight className="size-3.5 ml-1" />
+                      </Button>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </CardContent>
         )}
       </Card>
+
+      {/* Modal de Detalhes da Sessão */}
+      <SessionDetailModal
+        sessionId={selectedSessionId}
+        isOpen={Boolean(selectedSessionId)}
+        onClose={() => setSelectedSessionId(null)}
+      />
     </div>
   );
 };
