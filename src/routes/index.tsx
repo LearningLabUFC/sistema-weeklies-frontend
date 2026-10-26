@@ -1,12 +1,40 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { ProtectedRoute } from './ProtectedRoute';
-import App from '../App.tsx';
+
+import App from '@/App';
+import { NotFound } from '@/pages/Not Found/NotFound';
+import PendingApproval from '@/pages/user/PendingApproval/PendingApproval';
+import { adminRoutes } from '@/routes/admin.routes';
+import { AdminRoute } from '@/routes/AdminRoute';
+import { authRoutes } from '@/routes/auth.routes';
+import { leaderRoutes } from '@/routes/leader.routes';
+import { ProtectedRoute } from '@/routes/ProtectedRoute';
+import { userRoutes } from '@/routes/user.routes';
 
 export const router = createBrowserRouter([
-  { path: '/', element: <App /> },
   {
     element: <ProtectedRoute />,
-    children: [{ path: '/profile', element: <div>profile</div> }],
+    children: [
+      {
+        path: '/pending-approval',
+        element: <PendingApproval />,
+      },
+      {
+        path: '/',
+        element: <App />,
+        children: [
+          ...userRoutes,
+          ...leaderRoutes,
+          {
+            element: <AdminRoute />,
+            children: adminRoutes,
+          },
+        ],
+      },
+    ],
   },
-  { path: '*', element: <div> 404 Not Found</div> },
+  ...authRoutes,
+  {
+    path: '*',
+    element: <NotFound />,
+  },
 ]);
