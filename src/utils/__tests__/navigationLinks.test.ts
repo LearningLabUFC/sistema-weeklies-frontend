@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  adminHybridLinks,
   adminLinks,
   leaderLinks,
   superAdminLinks,
@@ -21,6 +22,13 @@ describe('navigationLinks utility', () => {
 
     it('deve retornar links de admin para a role correspondente', () => {
       expect(getNavigationLinks(ROLE_IDS.ADMIN)).toEqual(adminLinks);
+    });
+
+    it('deve incluir links operacionais híbridos quando admin possuir setores', () => {
+      expect(getNavigationLinks(ROLE_IDS.ADMIN, { hasSectors: true })).toEqual([
+        ...adminLinks,
+        ...adminHybridLinks,
+      ]);
     });
 
     it('deve retornar links de leader para a role correspondente', () => {
