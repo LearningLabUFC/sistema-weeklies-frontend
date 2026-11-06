@@ -1,4 +1,5 @@
 import {
+  adminHybridLinks,
   adminLinks,
   leaderLinks,
   superAdminLinks,
@@ -7,7 +8,10 @@ import {
 import { ROLE_IDS, ROLE_LABELS, ROLE_NAME_COLORS } from '@/config/roles';
 import type { NavigationLink } from '@/types/sidebar';
 
-export const getNavigationLinks = (role: string): NavigationLink[] => {
+export const getNavigationLinks = (
+  role: string,
+  options?: { hasSectors?: boolean },
+): NavigationLink[] => {
   const showAllLinks = import.meta.env.VITE_SHOW_ALL_LINKS === 'true';
 
   if (showAllLinks) {
@@ -17,6 +21,10 @@ export const getNavigationLinks = (role: string): NavigationLink[] => {
       (link, index, self) =>
         index === self.findIndex(item => item.to === link.to),
     );
+  }
+
+  if (role === ROLE_IDS.ADMIN && options?.hasSectors) {
+    return [...adminLinks, ...adminHybridLinks];
   }
 
   const linksMap: Record<string, NavigationLink[]> = {

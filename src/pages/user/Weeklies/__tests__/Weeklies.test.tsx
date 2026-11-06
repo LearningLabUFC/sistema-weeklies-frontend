@@ -441,6 +441,41 @@ describe('Weeklies Page', () => {
     expect(weekliesApi.getCurrentWeekly).not.toHaveBeenCalled();
   });
 
+  it('permite que administrador vinculado a setor acesse e consulte sua weekly pessoal', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: {
+        id: 'admin-lider-1',
+        nome_completo: 'Admin Líder',
+        email: 'admin.lider@ufc.br',
+        global_role: ROLE_IDS.ADMIN,
+      } as unknown as User,
+      isAuthenticated: true,
+      logout: vi.fn(),
+      login: vi.fn(),
+      registerUser: vi.fn(),
+      loading: false,
+      checkUserStatus: vi.fn(),
+    });
+
+    vi.mocked(weekliesApi.getCurrentWeekly).mockResolvedValue(mockWeekly);
+
+    render(
+      <MemoryRouter initialEntries={['/weeklies-test']}>
+        <Routes>
+          <Route path="/weeklies-test" element={<Weeklies />} />
+          <Route path="/admin" element={<div>Painel Admin Redirect</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(weekliesApi.getCurrentWeekly).toHaveBeenCalledWith('sec-1');
+    });
+
+    expect(screen.queryByText('Painel Admin Redirect')).not.toBeInTheDocument();
+    expect(screen.getByText('Relatório de Weekly')).toBeInTheDocument();
+  });
+
   it('exibe alerta de erro quando a submissão (W05) ou reabertura (W06) falham', async () => {
     const user = userEvent.setup();
     const showAlertDialogMock = vi.fn();

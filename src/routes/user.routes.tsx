@@ -7,6 +7,7 @@ import SectorsCatalog from '@/pages/user/Sectors/SectorsCatalog';
 import SectorTracking from '@/pages/user/Sectors/SectorTracking';
 import MyTasks from '@/pages/user/Tasks/MyTasks';
 import TimeClock from '@/pages/user/TimeClock/TimeClock';
+import Weeklies from '@/pages/user/Weeklies/Weeklies';
 import WeeklyDetailPage from '@/pages/user/WeeklyHistory/WeeklyDetailPage';
 import WeeklyHistory from '@/pages/user/WeeklyHistory/WeeklyHistory';
 import { HomeRoute } from '@/routes/HomeRoute';
@@ -15,6 +16,10 @@ export const userRoutes: RouteObject[] = [
   {
     index: true,
     element: <HomeRoute />,
+  },
+  {
+    path: 'minha-weekly',
+    element: <Weeklies />,
   },
   {
     path: 'weeklies',
