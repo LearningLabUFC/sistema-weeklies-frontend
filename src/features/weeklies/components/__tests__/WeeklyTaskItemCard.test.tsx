@@ -218,4 +218,71 @@ describe('WeeklyTaskItemCard Component', () => {
 
     expect(screen.getByText('Concluída')).toBeInTheDocument();
   });
+
+  it('em sectionMode="planejamento", não exibe checkbox nem seção de impedimento', () => {
+    render(
+      <WeeklyTaskItemCard
+        taskItem={baseTask}
+        isEditable={true}
+        canRemoveHerdada={false}
+        isLastItemInRejeitada={false}
+        sectionMode="planejamento"
+        onUpdate={mockOnUpdate}
+        onRemove={mockOnRemove}
+      />,
+    );
+
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /registrar impedimento/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Pendente')).not.toBeInTheDocument();
+  });
+
+  it('em tarefa concluida da semana anterior, oculta badge Pendente e prazo', () => {
+    render(
+      <WeeklyTaskItemCard
+        taskItem={{
+          ...baseTask,
+          status_task: 'PENDENTE',
+          concluida: true,
+          prazo_conclusao: '2026-10-10',
+        }}
+        isEditable={true}
+        canRemoveHerdada={false}
+        isLastItemInRejeitada={false}
+        sectionMode="retrospectiva"
+        onUpdate={mockOnUpdate}
+        onRemove={mockOnRemove}
+      />,
+    );
+
+    expect(screen.queryByText('Pendente')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Prazo:/)).not.toBeInTheDocument();
+  });
+
+  it('em tarefa HERDADA editável, exibe botões de revisão Concluída e Não concluída', async () => {
+    const user = userEvent.setup();
+    const mockDecision = vi.fn();
+    render(
+      <WeeklyTaskItemCard
+        taskItem={{ ...baseTask, origem: 'HERDADA' }}
+        isEditable={true}
+        canRemoveHerdada={false}
+        isLastItemInRejeitada={false}
+        sectionMode="retrospectiva"
+        herdadaReviewDecision="pendente"
+        onHerdadaReviewDecision={mockDecision}
+        onUpdate={mockOnUpdate}
+        onRemove={mockOnRemove}
+      />,
+    );
+
+    expect(screen.getByText('Revisão pendente')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Concluída$/i }));
+    expect(mockDecision).toHaveBeenCalledWith('wt-1', 'concluida');
+
+    await user.click(screen.getByRole('button', { name: /^Não concluída$/i }));
+    expect(mockDecision).toHaveBeenCalledWith('wt-1', 'nao_concluida');
+  });
 });

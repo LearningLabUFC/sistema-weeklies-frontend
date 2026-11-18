@@ -25,9 +25,10 @@ import { isAdminRole } from '@/config/roles';
 import { AuthContext } from '@/features/auth/context/AuthContext';
 import { useSectorContext } from '@/features/sectors/context/useSectorContext';
 import { tasksApi } from '@/features/weeklies/api/tasksApi';
+import { CollaboratorInlinePicker } from '@/features/weeklies/components/CollaboratorInlinePicker';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAsyncMutation } from '@/hooks/useAsyncMutation';
-import type { TaskResponse } from '@/types/weeklies';
+import type { EligibleCollaborator, TaskResponse } from '@/types/weeklies';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -82,6 +83,8 @@ function TaskModalContent({
   const [prazoConclusao, setPrazoConclusao] = useState(
     taskToEdit?.prazo_conclusao || '',
   );
+  const [selectedCollaborator, setSelectedCollaborator] =
+    useState<EligibleCollaborator | null>(null);
 
   const saveMutation = useAsyncMutation(
     async () => {
@@ -110,29 +113,55 @@ function TaskModalContent({
             prazo_conclusao: prazoConclusao,
           });
         }
-        return res;
+        return { res, inviteFailed: false };
       } else {
         // T02: Cria nova tarefa
         if (!setorId) {
           throw new Error('Selecione o setor da tarefa.');
         }
 
-        return tasksApi.create({
+        const created = await tasksApi.create({
           setor_id: setorId,
           titulo: cleanTitulo,
           descricao: descricao.trim() ? descricao.trim() : undefined,
           prazo_conclusao: prazoConclusao ? prazoConclusao : undefined,
         });
+
+        let inviteFailed = false;
+        if (
+          selectedCollaborator &&
+          created?.id &&
+          typeof tasksApi.assign === 'function'
+        ) {
+          try {
+            await tasksApi.assign(created.id, {
+              atribuido_id: selectedCollaborator.id,
+            });
+          } catch (err) {
+            console.error('Erro ao enviar convite de colaboração:', err);
+            inviteFailed = true;
+          }
+        }
+
+        return { res: created, inviteFailed };
       }
     },
     {
-      onSuccess: () => {
+      onSuccess: ({ inviteFailed }) => {
         showAlertDialog({
-          type: 'success',
-          title: isEditing ? 'Tarefa atualizada' : 'Tarefa criada',
+          type: inviteFailed ? 'warning' : 'success',
+          title: isEditing
+            ? 'Tarefa atualizada'
+            : inviteFailed
+              ? 'Tarefa criada com aviso'
+              : 'Tarefa criada',
           message: isEditing
             ? 'As informações da tarefa foram atualizadas com sucesso.'
-            : 'A nova tarefa foi cadastrada com sucesso no setor.',
+            : inviteFailed
+              ? 'A tarefa foi cadastrada, mas não foi possível enviar o convite ao colaborador selecionado.'
+              : selectedCollaborator
+                ? `A nova tarefa foi cadastrada e o convite foi enviado para ${selectedCollaborator.nome_completo}.`
+                : 'A nova tarefa foi cadastrada com sucesso no setor.',
         });
         onSuccess();
         onClose();
@@ -255,6 +284,14 @@ function TaskModalContent({
                   : 'Se omitido, o sistema calculará o prazo padrão configurado.'}
               </p>
             </div>
+
+            {!isEditing && (
+              <CollaboratorInlinePicker
+                selectedCollaborator={selectedCollaborator}
+                onSelect={setSelectedCollaborator}
+                disabled={saveMutation.isMutating}
+              />
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">

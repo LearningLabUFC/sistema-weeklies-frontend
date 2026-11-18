@@ -274,6 +274,9 @@ describe('Weeklies Page', () => {
       await screen.findByRole('button', { name: /Enviar Weekly/ }),
     );
     await user.click(
+      await screen.findByRole('button', { name: /Confirmar e Enviar Weekly/i }),
+    );
+    await user.click(
       screen.getByRole('button', { name: /^Adicionar Tarefa$/ }),
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -375,6 +378,12 @@ describe('Weeklies Page', () => {
 
     await user.click(submitBtn);
 
+    const confirmBtn = await screen.findByRole('button', {
+      name: /confirmar e enviar weekly/i,
+    });
+    expect(screen.getByText(/resumo da weekly/i)).toBeInTheDocument();
+    await user.click(confirmBtn);
+
     expect(weekliesApi.submit).toHaveBeenCalledWith('weekly-1');
   });
 
@@ -468,6 +477,11 @@ describe('Weeklies Page', () => {
       name: /enviar weekly \(w05\)/i,
     });
     await user.click(submitBtn);
+    await user.click(
+      await screen.findByRole('button', {
+        name: /confirmar e enviar weekly/i,
+      }),
+    );
 
     await waitFor(() => {
       expect(showAlertDialogMock).toHaveBeenCalledWith(
@@ -478,5 +492,251 @@ describe('Weeklies Page', () => {
         }),
       );
     });
+  });
+
+  it('divide a weekly em duas seções, exige revisão de herdadas com botões e espelha tarefas não concluídas', async () => {
+    const user = userEvent.setup();
+    const weeklyWithMixedTasks: WeeklyResponse = {
+      ...mockWeekly,
+      tasks: [
+        {
+          id: 'wt-herdada-pendente',
+          task_id: 'task-herdada-1',
+          titulo: 'Configurar Redis em produção',
+          descricao: 'Cache e sessões',
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-10',
+          concluida: false,
+          impedimento: null,
+          posicao: 1,
+          origem: 'HERDADA',
+        },
+        {
+          id: 'wt-avulsa-concluida',
+          task_id: 'task-avulsa-1',
+          titulo: 'Corrigir layout mobile',
+          descricao: null,
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-18',
+          concluida: true,
+          impedimento: null,
+          posicao: 2,
+          origem: 'NOVA',
+        },
+        {
+          id: 'wt-planejada',
+          task_id: 'task-nova-1',
+          titulo: 'Criar testes de integração',
+          descricao: null,
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-15',
+          concluida: false,
+          impedimento: null,
+          posicao: 3,
+          origem: 'NOVA',
+        },
+      ],
+    };
+
+    vi.mocked(weekliesApi.getCurrentWeekly).mockResolvedValue(
+      weeklyWithMixedTasks,
+    );
+    vi.mocked(weekliesApi.updateTaskItem)
+      .mockResolvedValueOnce({
+        ...weeklyWithMixedTasks.tasks[0],
+        concluida: false,
+      })
+      .mockResolvedValueOnce({
+        ...weeklyWithMixedTasks.tasks[0],
+        concluida: true,
+      });
+
+    render(
+      <MemoryRouter>
+        <Weeklies />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('O que fiz na semana anterior'),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('O que farei nesta semana?')).toBeInTheDocument();
+
+    // Tarefa planejada não possui checkbox nem botão de registrar impedimento
+    expect(
+      screen.queryByRole('checkbox', {
+        name: /marcar criar testes de integração como concluída/i,
+      }),
+    ).not.toBeInTheDocument();
+
+    // Tarefa avulsa já concluída não exibe badge Pendente nem prazo
+    expect(screen.queryByText(/Prazo: 18\/10\/2026/)).not.toBeInTheDocument();
+
+    // Tarefa herdada inicia com revisão pendente; ao clicar em "Não concluída", é espelhada
+    expect(screen.getByText('Revisão pendente')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Não concluída$/i }));
+
+    await waitFor(() => {
+      expect(weekliesApi.updateTaskItem).toHaveBeenCalledWith(
+        'weekly-1',
+        'wt-herdada-pendente',
+        { concluida: false },
+      );
+      expect(screen.getByText('Tarefas não concluídas')).toBeInTheDocument();
+    });
+
+    const mirroredItems = screen.getAllByTestId('uncompleted-mirrored-task');
+    expect(mirroredItems).toHaveLength(1);
+    expect(mirroredItems[0]).toHaveTextContent(
+      '↪ Configurar Redis em produção',
+    );
+    expect(
+      within(mirroredItems[0]).queryByText(/Corrigir layout mobile/i),
+    ).not.toBeInTheDocument();
+
+    // Ao clicar em "Concluída" na Seção 1, ela some do espelho
+    await user.click(screen.getByRole('button', { name: /^Concluída$/i }));
+
+    await waitFor(() => {
+      expect(weekliesApi.updateTaskItem).toHaveBeenCalledWith(
+        'weekly-1',
+        'wt-herdada-pendente',
+        { concluida: true, impedimento: null },
+      );
+      expect(
+        screen.queryByTestId('uncompleted-mirrored-task'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('permite adicionar entrega realizada na Seção 1 enviando concluida: true', async () => {
+    const user = userEvent.setup();
+    vi.mocked(weekliesApi.getCurrentWeekly).mockResolvedValue(mockWeekly);
+    vi.mocked(weekliesApi.addTask).mockResolvedValueOnce({
+      id: 'wt-entrega-1',
+      task_id: 'task-entrega-1',
+      titulo: 'Deploy emergencial realizado',
+      descricao: null,
+      status_task: 'PENDENTE',
+      prazo_conclusao: null,
+      concluida: true,
+      impedimento: null,
+      posicao: 2,
+      origem: 'NOVA',
+    });
+
+    render(
+      <MemoryRouter>
+        <Weeklies />
+      </MemoryRouter>,
+    );
+
+    const addDeliveredBtn = await screen.findByRole('button', {
+      name: /adicionar entrega realizada/i,
+    });
+    await user.click(addDeliveredBtn);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByText('Adicionar Entrega Realizada'),
+    ).toBeInTheDocument();
+
+    await user.type(
+      within(dialog).getByLabelText(/título da tarefa/i),
+      'Deploy emergencial realizado',
+    );
+
+    await user.click(
+      within(dialog).getByRole('button', { name: /^Adicionar Tarefa$/ }),
+    );
+
+    await waitFor(() => {
+      expect(weekliesApi.addTask).toHaveBeenCalledWith(
+        'weekly-1',
+        expect.objectContaining({
+          titulo: 'Deploy emergencial realizado',
+          concluida: true,
+        }),
+      );
+    });
+  });
+
+  it('impede abrir resumo de envio enquanto houver tarefa HERDADA com revisão pendente', async () => {
+    const user = userEvent.setup();
+    const showAlertDialogMock = vi.fn();
+    vi.mocked(useAlertDialog).mockReturnValue({
+      showAlertDialog: showAlertDialogMock,
+      hideAlertDialog: vi.fn(),
+    });
+
+    vi.mocked(weekliesApi.getCurrentWeekly).mockResolvedValue({
+      ...mockWeekly,
+      tasks: [
+        {
+          id: 'wt-herdada-1',
+          task_id: 't-h1',
+          titulo: 'Herdada pendente de revisão',
+          descricao: null,
+          status_task: 'PENDENTE',
+          prazo_conclusao: null,
+          concluida: false,
+          impedimento: null,
+          posicao: 1,
+          origem: 'HERDADA',
+        },
+      ],
+    });
+
+    render(
+      <MemoryRouter>
+        <Weeklies />
+      </MemoryRouter>,
+    );
+
+    const submitBtn = await screen.findByRole('button', {
+      name: /enviar weekly \(w05\)/i,
+    });
+    await user.click(submitBtn);
+
+    expect(showAlertDialogMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'warning',
+        title: 'Revisão pendente',
+      }),
+    );
+    expect(screen.queryByText(/resumo da weekly/i)).not.toBeInTheDocument();
+    expect(weekliesApi.submit).not.toHaveBeenCalled();
+  });
+
+  it('exibe botão Visualizar Weekly após envio e abre resumo somente leitura', async () => {
+    const user = userEvent.setup();
+    const enviadaWeekly: WeeklyResponse = {
+      ...mockWeekly,
+      status: 'ENVIADA',
+      enviada_em: '2026-10-03T18:00:00Z',
+    };
+    vi.mocked(weekliesApi.getCurrentWeekly).mockResolvedValue(enviadaWeekly);
+
+    render(
+      <MemoryRouter>
+        <Weeklies />
+      </MemoryRouter>,
+    );
+
+    const viewBtn = await screen.findByRole('button', {
+      name: /visualizar weekly/i,
+    });
+    await user.click(viewBtn);
+
+    expect(await screen.findByText(/resumo da weekly/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^fechar$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /confirmar e enviar weekly/i }),
+    ).not.toBeInTheDocument();
   });
 });

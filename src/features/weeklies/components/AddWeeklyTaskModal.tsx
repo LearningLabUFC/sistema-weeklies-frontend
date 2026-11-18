@@ -23,10 +23,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { tasksApi } from '@/features/weeklies/api/tasksApi';
 import { weekliesApi } from '@/features/weeklies/api/weekliesApi';
+import { CollaboratorInlinePicker } from '@/features/weeklies/components/CollaboratorInlinePicker';
 import { formatDateCivil } from '@/features/weeklies/utils/dateUtils';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAsyncMutation } from '@/hooks/useAsyncMutation';
-import type { TaskResponse } from '@/types/weeklies';
+import type { EligibleCollaborator, TaskResponse } from '@/types/weeklies';
 
 interface AddWeeklyTaskModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ interface AddWeeklyTaskModalProps {
   sectorId: string;
   existingTaskIds: string[];
   onSuccess: () => void;
+  defaultCompleted?: boolean;
 }
 
 export function AddWeeklyTaskModal({
@@ -44,6 +46,7 @@ export function AddWeeklyTaskModal({
   sectorId,
   existingTaskIds,
   onSuccess,
+  defaultCompleted = false,
 }: AddWeeklyTaskModalProps) {
   const { showAlertDialog } = useAlertDialog();
   const [tab, setTab] = useState<'nova' | 'existente'>('nova');
@@ -52,6 +55,8 @@ export function AddWeeklyTaskModal({
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [prazoConclusao, setPrazoConclusao] = useState('');
+  const [selectedCollaborator, setSelectedCollaborator] =
+    useState<EligibleCollaborator | null>(null);
 
   // Form: Tarefa Existente
   const [pendingTasks, setPendingTasks] = useState<TaskResponse[]>([]);
@@ -62,6 +67,7 @@ export function AddWeeklyTaskModal({
     setTitulo('');
     setDescricao('');
     setPrazoConclusao('');
+    setSelectedCollaborator(null);
     setSelectedTaskId('');
     setTab('nova');
     onClose();
@@ -105,33 +111,60 @@ export function AddWeeklyTaskModal({
           throw new Error('O título não pode exceder 255 caracteres.');
         }
 
-        return weekliesApi.addTask(weeklyId, {
+        const createdItem = await weekliesApi.addTask(weeklyId, {
           titulo: cleanTitulo,
           descricao: descricao.trim() ? descricao.trim() : undefined,
-          prazo_conclusao: prazoConclusao ? prazoConclusao : undefined,
+          prazo_conclusao:
+            !defaultCompleted && prazoConclusao ? prazoConclusao : undefined,
+          ...(defaultCompleted ? { concluida: true } : {}),
         });
+
+        let inviteFailed = false;
+        if (
+          selectedCollaborator &&
+          createdItem?.task_id &&
+          typeof tasksApi.assign === 'function'
+        ) {
+          try {
+            await tasksApi.assign(createdItem.task_id, {
+              atribuido_id: selectedCollaborator.id,
+            });
+          } catch (err) {
+            console.error('Erro ao enviar convite de colaboração:', err);
+            inviteFailed = true;
+          }
+        }
+
+        return { createdItem, inviteFailed };
       } else {
         if (!selectedTaskId) {
           throw new Error('Selecione uma tarefa existente para vincular.');
         }
 
-        return weekliesApi.addTask(weeklyId, {
+        const createdItem = await weekliesApi.addTask(weeklyId, {
           task_id: selectedTaskId,
+          ...(defaultCompleted ? { concluida: true } : {}),
         });
+        return { createdItem, inviteFailed: false };
       }
     },
     {
-      onSuccess: () => {
+      onSuccess: ({ inviteFailed }) => {
         showAlertDialog({
-          type: 'success',
-          title: 'Tarefa adicionada',
-          message:
-            tab === 'nova'
-              ? 'Nova tarefa criada e adicionada à weekly com sucesso.'
+          type: inviteFailed ? 'warning' : 'success',
+          title: inviteFailed
+            ? 'Tarefa adicionada com aviso'
+            : 'Tarefa adicionada',
+          message: inviteFailed
+            ? 'A tarefa foi adicionada à weekly, mas não foi possível enviar o convite ao colaborador selecionado.'
+            : tab === 'nova'
+              ? selectedCollaborator
+                ? `Nova tarefa adicionada e convite enviado para ${selectedCollaborator.nome_completo}.`
+                : 'Nova tarefa criada e adicionada à weekly com sucesso.'
               : 'Tarefa vinculada à weekly com sucesso.',
         });
         onSuccess();
-        onClose();
+        handleClose();
       },
     },
   );
@@ -148,11 +181,14 @@ export function AddWeeklyTaskModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5 text-indigo-600" />
-              Adicionar Tarefa à Weekly
+              {defaultCompleted
+                ? 'Adicionar Entrega Realizada'
+                : 'Adicionar Tarefa à Weekly'}
             </DialogTitle>
             <DialogDescription>
-              Crie uma nova tarefa inline ou vincule uma tarefa pendente
-              existente.
+              {defaultCompleted
+                ? 'Registre uma atividade que você concluiu na semana anterior (não planejada) ou vincule uma tarefa existente.'
+                : 'Crie uma nova tarefa inline ou vincule uma tarefa pendente existente.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -224,21 +260,30 @@ export function AddWeeklyTaskModal({
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="task-prazo">
-                    Prazo sugerido de conclusão (opcional)
-                  </Label>
-                  <Input
-                    id="task-prazo"
-                    type="date"
-                    value={prazoConclusao}
-                    onChange={e => setPrazoConclusao(e.target.value)}
-                    disabled={addMutation.isMutating}
-                  />
-                  <p className="text-[11px] text-slate-400">
-                    Se omitido, o sistema calculará o prazo padrão configurado.
-                  </p>
-                </div>
+                {!defaultCompleted && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="task-prazo">
+                      Prazo sugerido de conclusão (opcional)
+                    </Label>
+                    <Input
+                      id="task-prazo"
+                      type="date"
+                      value={prazoConclusao}
+                      onChange={e => setPrazoConclusao(e.target.value)}
+                      disabled={addMutation.isMutating}
+                    />
+                    <p className="text-[11px] text-slate-400">
+                      Se omitido, o sistema calculará o prazo padrão
+                      configurado.
+                    </p>
+                  </div>
+                )}
+
+                <CollaboratorInlinePicker
+                  selectedCollaborator={selectedCollaborator}
+                  onSelect={setSelectedCollaborator}
+                  disabled={addMutation.isMutating}
+                />
               </>
             ) : (
               <div className="space-y-1.5">
@@ -284,7 +329,7 @@ export function AddWeeklyTaskModal({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={addMutation.isMutating}
             >
               Cancelar

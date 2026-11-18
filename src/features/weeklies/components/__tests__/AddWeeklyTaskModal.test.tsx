@@ -20,6 +20,8 @@ vi.mock('@/features/weeklies/api/weekliesApi', () => ({
 vi.mock('@/features/weeklies/api/tasksApi', () => ({
   tasksApi: {
     getMyTasks: vi.fn(),
+    listEligibleCollaborators: vi.fn(),
+    assign: vi.fn(),
   },
 }));
 
@@ -161,5 +163,132 @@ describe('AddWeeklyTaskModal Component', () => {
 
     expect(mockOnSuccess).toHaveBeenCalled();
     expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('exibe modo de entrega realizada e envia concluida: true quando defaultCompleted é true', async () => {
+    const user = userEvent.setup();
+    vi.mocked(weekliesApi.addTask).mockResolvedValueOnce({
+      id: 'wt-3',
+      task_id: 'new-task-2',
+      titulo: 'Corrigir bug urgente em produção',
+      descricao: null,
+      status_task: 'PENDENTE',
+      prazo_conclusao: null,
+      concluida: true,
+      impedimento: null,
+      posicao: 3,
+      origem: 'NOVA',
+    });
+
+    render(
+      <AddWeeklyTaskModal
+        isOpen={true}
+        onClose={mockOnClose}
+        weeklyId="weekly-1"
+        sectorId="sec-1"
+        existingTaskIds={[]}
+        defaultCompleted={true}
+        onSuccess={mockOnSuccess}
+      />,
+    );
+
+    expect(screen.getByText('Adicionar Entrega Realizada')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/prazo sugerido/i)).not.toBeInTheDocument();
+
+    const titleInput = screen.getByLabelText(/título da tarefa/i);
+    await user.type(titleInput, 'Corrigir bug urgente em produção');
+
+    const submitBtn = screen.getByRole('button', {
+      name: /adicionar tarefa/i,
+    });
+    await user.click(submitBtn);
+
+    expect(weekliesApi.addTask).toHaveBeenCalledWith('weekly-1', {
+      titulo: 'Corrigir bug urgente em produção',
+      descricao: undefined,
+      prazo_conclusao: undefined,
+      concluida: true,
+    });
+    expect(mockOnSuccess).toHaveBeenCalled();
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('permite convidar colaborador opcionalmente no ato de adicionar nova tarefa', async () => {
+    const user = userEvent.setup();
+    vi.mocked(tasksApi.listEligibleCollaborators).mockResolvedValueOnce({
+      colaboradores: [
+        {
+          id: 'colab-1',
+          nome_completo: 'Maria Colaboradora',
+          email: 'maria@ufc.br',
+          matricula: '554433',
+          setores: ['Desenvolvimento'],
+        },
+      ],
+      total: 1,
+      pagina: 1,
+      limite: 15,
+    });
+    vi.mocked(weekliesApi.addTask).mockResolvedValueOnce({
+      id: 'wt-4',
+      task_id: 'task-created-4',
+      titulo: 'Implementar cache distribuído',
+      descricao: null,
+      status_task: 'PENDENTE',
+      prazo_conclusao: null,
+      concluida: false,
+      impedimento: null,
+      posicao: 4,
+      origem: 'NOVA',
+    });
+    vi.mocked(tasksApi.assign).mockResolvedValueOnce({
+      id: 'assign-1',
+      task_id: 'task-created-4',
+      task_titulo: 'Implementar cache distribuído',
+      solicitante_id: 'user-1',
+      solicitante_nome: 'Usuário Teste',
+      atribuido_id: 'colab-1',
+      atribuido_nome: 'Maria Colaboradora',
+      status: 'PENDENTE',
+      criado_em: '2026-10-02T10:00:00Z',
+      respondido_em: null,
+    });
+
+    render(
+      <AddWeeklyTaskModal
+        isOpen={true}
+        onClose={mockOnClose}
+        weeklyId="weekly-1"
+        sectorId="sec-1"
+        existingTaskIds={[]}
+        onSuccess={mockOnSuccess}
+      />,
+    );
+
+    await user.type(
+      screen.getByLabelText(/título da tarefa/i),
+      'Implementar cache distribuído',
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: /convidar colaborador/i }),
+    );
+
+    const colabBtn = await screen.findByText('Maria Colaboradora');
+    await user.click(colabBtn);
+
+    await user.click(screen.getByRole('button', { name: /adicionar tarefa/i }));
+
+    await waitFor(() => {
+      expect(weekliesApi.addTask).toHaveBeenCalledWith(
+        'weekly-1',
+        expect.objectContaining({
+          titulo: 'Implementar cache distribuído',
+        }),
+      );
+      expect(tasksApi.assign).toHaveBeenCalledWith('task-created-4', {
+        atribuido_id: 'colab-1',
+      });
+    });
   });
 });

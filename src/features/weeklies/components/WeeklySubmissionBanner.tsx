@@ -3,6 +3,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Eye,
   RotateCcw,
 } from 'lucide-react';
 
@@ -22,12 +23,14 @@ interface WeeklySubmissionBannerProps {
   weekly: WeeklyResponse;
   onReopen: () => Promise<void>;
   isReopening: boolean;
+  onViewSummary?: () => void;
 }
 
 export function WeeklySubmissionBanner({
   weekly,
   onReopen,
   isReopening,
+  onViewSummary,
 }: WeeklySubmissionBannerProps) {
   const { showAlertDialog } = useAlertDialog();
   const janelaAberta = dentroDaJanela();
@@ -140,38 +143,68 @@ export function WeeklySubmissionBanner({
             </p>
           </div>
 
-          {janelaAberta && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleReopenClick}
-              disabled={isReopening}
-              className="gap-1.5 border-sky-300 text-sky-800 hover:bg-sky-100 dark:border-sky-800 dark:text-sky-300 shrink-0 self-start sm:self-auto"
-            >
-              {isReopening ? (
-                <Spinner className="w-3.5 h-3.5" />
-              ) : (
-                <RotateCcw className="w-3.5 h-3.5" />
-              )}
-              Reabrir Weekly (W06)
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2 shrink-0 self-start sm:self-auto">
+            {onViewSummary && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onViewSummary}
+                className="gap-1.5 border-sky-300 bg-white/80 text-sky-800 hover:bg-sky-100 dark:border-sky-800 dark:bg-slate-900/60 dark:text-sky-300"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Visualizar Weekly
+              </Button>
+            )}
+
+            {janelaAberta && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleReopenClick}
+                disabled={isReopening}
+                className="gap-1.5 border-sky-300 text-sky-800 hover:bg-sky-100 dark:border-sky-800 dark:text-sky-300"
+              >
+                {isReopening ? (
+                  <Spinner className="w-3.5 h-3.5" />
+                ) : (
+                  <RotateCcw className="w-3.5 h-3.5" />
+                )}
+                Reabrir Weekly (W06)
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
       {/* Alerta de APROVADA */}
       {weekly.status === 'APROVADA' && (
-        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200 text-xs space-y-1">
-          <div className="flex items-center gap-2 font-semibold text-sm text-emerald-950 dark:text-emerald-100">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Weekly Aprovada pelo Líder
+        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 font-semibold text-sm text-emerald-950 dark:text-emerald-100">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              Weekly Aprovada pelo Líder
+            </div>
+            <p className="text-emerald-700 dark:text-emerald-300">
+              Avaliada em {formatTimestampFortaleza(weekly.avaliada_em)}.
+              {weekly.observacao_lider &&
+                ` Observação: ${weekly.observacao_lider}`}
+            </p>
           </div>
-          <p className="text-emerald-700 dark:text-emerald-300">
-            Avaliada em {formatTimestampFortaleza(weekly.avaliada_em)}.
-            {weekly.observacao_lider &&
-              ` Observação: ${weekly.observacao_lider}`}
-          </p>
+
+          {onViewSummary && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onViewSummary}
+              className="gap-1.5 border-emerald-300 bg-white/80 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-slate-900/60 dark:text-emerald-300 shrink-0 self-start sm:self-auto"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Visualizar Weekly
+            </Button>
+          )}
         </div>
       )}
     </div>

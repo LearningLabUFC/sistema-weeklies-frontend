@@ -70,6 +70,7 @@ export interface AddWeeklyTaskRequest {
   titulo?: string | null;
   descricao?: string | null;
   prazo_conclusao?: string | null; // YYYY-MM-DD
+  concluida?: boolean;
 }
 
 export interface UpdateWeeklyTaskRequest {

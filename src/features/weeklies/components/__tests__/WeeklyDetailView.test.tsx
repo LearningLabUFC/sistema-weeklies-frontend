@@ -138,6 +138,11 @@ describe('WeeklyDetailView', () => {
 
     fireEvent.click(resubmitBtn);
 
+    const confirmResubmitBtn = await screen.findByRole('button', {
+      name: /confirmar e reenviar weekly/i,
+    });
+    fireEvent.click(confirmResubmitBtn);
+
     await waitFor(() => {
       expect(weekliesApi.submit).toHaveBeenCalledWith('w-456');
       expect(handleUpdated).toHaveBeenCalled();
@@ -244,6 +249,48 @@ describe('WeeklyDetailView', () => {
     });
   });
 
+  it('fecha o modal da weekly imediatamente após aprovação quando renderizado em modo modal', async () => {
+    const sentWeekly: WeeklyResponse = {
+      ...baseWeekly,
+      status: 'ENVIADA',
+      usuario_id: 'u-membro',
+    };
+    const approvedWeekly: WeeklyResponse = {
+      ...sentWeekly,
+      status: 'APROVADA',
+    };
+
+    vi.mocked(weekliesApi.getById).mockResolvedValue(sentWeekly);
+    vi.mocked(weekliesApi.evaluate).mockResolvedValue(approvedWeekly);
+
+    const handleClose = vi.fn();
+    const handleUpdated = vi.fn();
+    renderWithProviders(
+      <WeeklyDetailView
+        weeklyId="w-456"
+        isModal={true}
+        onClose={handleClose}
+        isLeaderOrAdmin={true}
+        currentUserId="u-leader"
+        onWeeklyUpdated={handleUpdated}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Semana de 28/09/2026')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /avaliar weekly/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /confirmar aprovação/i }),
+    );
+
+    await waitFor(() => {
+      expect(handleClose).toHaveBeenCalledTimes(1);
+      expect(handleUpdated).toHaveBeenCalledWith(approvedWeekly);
+    });
+  });
+
   it('não deve exibir botão de fechar no cabeçalho quando renderizado dentro de modal (isModal=true)', async () => {
     vi.mocked(weekliesApi.getById).mockResolvedValue(baseWeekly);
 
@@ -289,12 +336,15 @@ describe('WeeklyDetailView', () => {
           concluida: false,
           impedimento: null,
           posicao: 0,
-          origem: 'NOVA',
+          origem: 'HERDADA',
         },
       ],
     };
 
     vi.mocked(weekliesApi.getById).mockResolvedValue(rejectedWeekly);
+    vi.mocked(weekliesApi.updateTask).mockResolvedValue(
+      rejectedWeekly.tasks[0],
+    );
     vi.mocked(weekliesApi.submit).mockResolvedValue({
       ...rejectedWeekly,
       status: 'ENVIADA',
@@ -308,8 +358,11 @@ describe('WeeklyDetailView', () => {
       ).toBeEnabled();
     });
 
+    // Marca a tarefa herdada como não concluída para liberar o registro de impedimento
+    fireEvent.click(screen.getByRole('button', { name: /^Não concluída$/i }));
+
     // Abre seção de impedimento e digita texto não salvo
-    const addImpedimentBtn = screen.getByRole('button', {
+    const addImpedimentBtn = await screen.findByRole('button', {
       name: /registrar impedimento/i,
     });
     fireEvent.click(addImpedimentBtn);
@@ -415,5 +468,82 @@ describe('WeeklyDetailView', () => {
         'wt-herdada',
       );
     });
+  });
+
+  it('exibe as duas seções e espelha apenas tarefas não concluídas da Seção 1 no bloco "Tarefas não concluídas"', async () => {
+    const detailedWeekly: WeeklyResponse = {
+      ...baseWeekly,
+      status: 'ENVIADA',
+      tasks: [
+        {
+          id: 'wt-herdada-nao-concluida',
+          task_id: 't-100',
+          titulo: 'Migrar serviço de e-mails',
+          descricao: 'Configurar filas',
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-05',
+          concluida: false,
+          impedimento: 'Aguardando credenciais SMTP',
+          posicao: 0,
+          origem: 'HERDADA',
+        },
+        {
+          id: 'wt-herdada-concluida',
+          task_id: 't-101',
+          titulo: 'Atualizar dependências',
+          descricao: null,
+          status_task: 'CONCLUIDA',
+          prazo_conclusao: '2026-10-02',
+          concluida: true,
+          impedimento: null,
+          posicao: 1,
+          origem: 'HERDADA',
+        },
+        {
+          id: 'wt-planejada-nova',
+          task_id: 't-102',
+          titulo: 'Documentar novos endpoints',
+          descricao: null,
+          status_task: 'PENDENTE',
+          prazo_conclusao: '2026-10-12',
+          concluida: false,
+          impedimento: null,
+          posicao: 2,
+          origem: 'NOVA',
+        },
+      ],
+    };
+
+    vi.mocked(weekliesApi.getById).mockResolvedValue(detailedWeekly);
+
+    renderWithProviders(<WeeklyDetailView weeklyId="w-456" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('O que fiz na semana anterior'),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('O que farei nesta semana?')).toBeInTheDocument();
+    expect(screen.getByText('Tarefas não concluídas')).toBeInTheDocument();
+
+    // Tarefa planejada não possui checkbox nem botão de registrar impedimento
+    expect(
+      screen.queryByRole('checkbox', {
+        name: /marcar documentar novos endpoints como concluída/i,
+      }),
+    ).not.toBeInTheDocument();
+
+    const mirrored = screen.getAllByTestId('uncompleted-mirrored-task');
+    expect(mirrored).toHaveLength(1);
+    expect(mirrored[0]).toHaveTextContent('↪ Migrar serviço de e-mails');
+    expect(mirrored[0]).toHaveTextContent('Aguardando credenciais SMTP');
+    expect(
+      screen.queryByText(/↪ Atualizar dependências/),
+    ).not.toBeInTheDocument();
+
+    // Garante que o título principal permanece intacto sem colisão de getByText
+    expect(screen.getByText('Migrar serviço de e-mails')).toBeInTheDocument();
+    expect(screen.getByText('Documentar novos endpoints')).toBeInTheDocument();
   });
 });

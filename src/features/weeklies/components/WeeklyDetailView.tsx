@@ -14,13 +14,21 @@ import { useCallback, useContext, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isAdminRole } from '@/config/roles';
 import { AuthContext } from '@/features/auth/context/AuthContext';
 import { weekliesApi } from '@/features/weeklies/api/weekliesApi';
 import { AddWeeklyTaskModal } from '@/features/weeklies/components/AddWeeklyTaskModal';
 import { EvaluateWeeklyModal } from '@/features/weeklies/components/EvaluateWeeklyModal';
+import { MirroredUncompletedTasks } from '@/features/weeklies/components/MirroredUncompletedTasks';
+import { WeeklyReviewSummarySheet } from '@/features/weeklies/components/WeeklyReviewSummarySheet';
 import { WeeklyStatusBadge } from '@/features/weeklies/components/WeeklyStatusBadge';
 import { WeeklyTaskItemCard } from '@/features/weeklies/components/WeeklyTaskItemCard';
 import {
@@ -30,6 +38,11 @@ import {
   isRejeitadaWithinGracePeriod,
   obterSemanaReferencia,
 } from '@/features/weeklies/utils/dateUtils';
+import {
+  getHerdadaReviewDecision,
+  type HerdadaDecisionMap,
+  partitionWeeklyTasks,
+} from '@/features/weeklies/utils/weeklyTaskSections';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAsyncMutation } from '@/hooks/useAsyncMutation';
 import { useAsyncQuery } from '@/hooks/useAsyncQuery';
@@ -57,7 +70,13 @@ export const WeeklyDetailView = ({
   const isLeaderOrAdminEffective =
     isLeaderOrAdmin || isAdminRole(authContext?.user?.global_role);
   const { showAlertDialog } = useAlertDialog();
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [addTaskModalMode, setAddTaskModalMode] = useState<
+    'retrospectiva' | 'planejamento' | null
+  >(null);
+  const [herdadaDecisions, setHerdadaDecisions] = useState<HerdadaDecisionMap>(
+    {},
+  );
+  const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
   const [isEvaluateModalOpen, setIsEvaluateModalOpen] = useState(false);
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
   const [isUpdatingTask, setIsUpdatingTask] = useState(false);
@@ -97,6 +116,8 @@ export const WeeklyDetailView = ({
     },
     {
       onSuccess: updated => {
+        setIsReviewSheetOpen(false);
+        setHerdadaDecisions({});
         refetch();
         onWeeklyUpdated?.(updated);
       },
@@ -118,6 +139,8 @@ export const WeeklyDetailView = ({
     },
     {
       onSuccess: updated => {
+        setIsReviewSheetOpen(false);
+        setHerdadaDecisions({});
         refetch();
         onWeeklyUpdated?.(updated);
       },
@@ -203,6 +226,20 @@ export const WeeklyDetailView = ({
 
   const hasPendingTaskChanges = pendingTaskIds.size > 0 || isUpdatingTask;
 
+  const { retrospectiveTasks, uncompletedRetrospectiveTasks, plannedTasks } =
+    partitionWeeklyTasks(
+      weekly.tasks,
+      isEditable ? herdadaDecisions : undefined,
+    );
+
+  const pendingHerdadaCount = isEditable
+    ? retrospectiveTasks.filter(
+        t =>
+          t.origem === 'HERDADA' &&
+          getHerdadaReviewDecision(t, herdadaDecisions) === 'pendente',
+      ).length
+    : 0;
+
   // W10: Update item
   const handleUpdateTask = async (
     weeklyTaskId: string,
@@ -225,6 +262,17 @@ export const WeeklyDetailView = ({
     } finally {
       setIsUpdatingTask(false);
     }
+  };
+
+  const handleHerdadaDecision = async (
+    weeklyTaskId: string,
+    decision: 'concluida' | 'nao_concluida',
+  ) => {
+    setHerdadaDecisions(prev => ({ ...prev, [weeklyTaskId]: decision }));
+    await handleUpdateTask(weeklyTaskId, {
+      concluida: decision === 'concluida',
+      ...(decision === 'concluida' ? { impedimento: null } : {}),
+    });
   };
 
   // W11: Remove item
@@ -412,50 +460,146 @@ export const WeeklyDetailView = ({
         </div>
       </div>
 
-      {/* Action Header / Add Task */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <FileText className="w-5 h-5 text-indigo-500" />
-          <span>Tarefas da Weekly ({weekly.tasks.length})</span>
-        </h3>
+      {/* Seção 1: O que fiz na semana anterior */}
+      <Card className="border-slate-200 dark:border-slate-800">
+        <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-500" />
+                <span>O que fiz na semana anterior</span>
+              </CardTitle>
+              <CardDescription className="text-xs mt-1">
+                Tarefas herdadas do ciclo anterior, entregas concluídas e
+                impedimentos relatados.
+              </CardDescription>
+            </div>
 
-        {isEditable && (
-          <Button
-            size="sm"
-            onClick={() => setIsAddTaskModalOpen(true)}
-            className="gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Adicionar Tarefa</span>
-          </Button>
-        )}
-      </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                {retrospectiveTasks.length}{' '}
+                {retrospectiveTasks.length === 1 ? 'tarefa' : 'tarefas'}
+              </span>
+              {isEditable && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAddTaskModalMode('retrospectiva')}
+                  className="gap-1.5 rounded-xl text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Adicionar Entrega Realizada</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
 
-      {/* Tasks List */}
-      {weekly.tasks.length === 0 ? (
-        <div className="text-center py-10 border border-dashed rounded-2xl p-6 text-muted-foreground">
-          <Calendar className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
-          <p className="font-medium">Nenhuma tarefa associada a esta weekly.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {weekly.tasks.map(taskItem => (
-            <WeeklyTaskItemCard
-              key={taskItem.id}
-              taskItem={taskItem}
-              isEditable={isEditable}
-              canRemoveHerdada={canLeaderRemoveTasks}
-              isLastItemInRejeitada={
-                weekly.status === 'REJEITADA' && weekly.tasks.length <= 1
-              }
-              onUpdate={handleUpdateTask}
-              onRemove={handleRemoveTask}
-              onPendingChange={handlePendingChange}
-              disabled={submitMutation.isMutating || reopenMutation.isMutating}
-            />
-          ))}
-        </div>
-      )}
+        <CardContent className="p-4 sm:p-6 space-y-4">
+          {retrospectiveTasks.length === 0 ? (
+            <div className="text-center py-6 border border-dashed rounded-xl p-4 text-muted-foreground">
+              <Calendar className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
+              <p className="text-xs">
+                Nenhuma entrega ou tarefa herdada da semana anterior registrada.
+              </p>
+            </div>
+          ) : (
+            retrospectiveTasks.map(taskItem => (
+              <WeeklyTaskItemCard
+                key={taskItem.id}
+                taskItem={taskItem}
+                isEditable={isEditable}
+                canRemoveHerdada={canLeaderRemoveTasks}
+                isLastItemInRejeitada={
+                  weekly.status === 'REJEITADA' && weekly.tasks.length <= 1
+                }
+                sectionMode="retrospectiva"
+                herdadaReviewDecision={
+                  taskItem.origem === 'HERDADA'
+                    ? getHerdadaReviewDecision(taskItem, herdadaDecisions)
+                    : undefined
+                }
+                onHerdadaReviewDecision={
+                  isEditable ? handleHerdadaDecision : undefined
+                }
+                onUpdate={handleUpdateTask}
+                onRemove={handleRemoveTask}
+                onPendingChange={handlePendingChange}
+                disabled={
+                  submitMutation.isMutating || reopenMutation.isMutating
+                }
+              />
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Seção 2: O que farei nesta semana? */}
+      <Card className="border-slate-200 dark:border-slate-800">
+        <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-500" />
+                <span>O que farei nesta semana?</span>
+              </CardTitle>
+              <CardDescription className="text-xs mt-1">
+                Compromissos e novas tarefas planejadas para este ciclo.
+              </CardDescription>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                {plannedTasks.length}{' '}
+                {plannedTasks.length === 1 ? 'planejada' : 'planejadas'}
+              </span>
+              {isEditable && (
+                <Button
+                  size="sm"
+                  onClick={() => setAddTaskModalMode('planejamento')}
+                  className="gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Tarefa</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4 sm:p-6 space-y-4">
+          <MirroredUncompletedTasks tasks={uncompletedRetrospectiveTasks} />
+
+          {plannedTasks.length === 0 &&
+          uncompletedRetrospectiveTasks.length === 0 ? (
+            <div className="text-center py-8 border border-dashed rounded-xl p-6 text-muted-foreground">
+              <Calendar className="w-9 h-9 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
+              <p className="text-sm font-medium">
+                Nenhuma tarefa planejada associada a esta weekly.
+              </p>
+            </div>
+          ) : (
+            plannedTasks.map(taskItem => (
+              <WeeklyTaskItemCard
+                key={taskItem.id}
+                taskItem={taskItem}
+                isEditable={isEditable}
+                canRemoveHerdada={canLeaderRemoveTasks}
+                isLastItemInRejeitada={
+                  weekly.status === 'REJEITADA' && weekly.tasks.length <= 1
+                }
+                sectionMode="planejamento"
+                onUpdate={handleUpdateTask}
+                onRemove={handleRemoveTask}
+                onPendingChange={handlePendingChange}
+                disabled={
+                  submitMutation.isMutating || reopenMutation.isMutating
+                }
+              />
+            ))
+          )}
+        </CardContent>
+      </Card>
 
       {/* Bottom Action Footer */}
       {(isEditable ||
@@ -519,7 +663,16 @@ export const WeeklyDetailView = ({
                     });
                     return;
                   }
-                  submitMutation.execute();
+                  if (pendingHerdadaCount > 0) {
+                    showAlertDialog({
+                      type: 'warning',
+                      title: 'Revisão pendente',
+                      message:
+                        'Revise todas as tarefas herdadas da semana anterior (marcando como Concluída ou Não concluída) antes de enviar a weekly.',
+                    });
+                    return;
+                  }
+                  setIsReviewSheetOpen(true);
                 }}
                 disabled={
                   submitMutation.isMutating ||
@@ -554,20 +707,37 @@ export const WeeklyDetailView = ({
       )}
 
       {/* Modal W09 for adding inline task or linking existing */}
-      {isAddTaskModalOpen && (
+      {addTaskModalMode !== null && (
         <AddWeeklyTaskModal
-          isOpen={isAddTaskModalOpen}
+          isOpen={addTaskModalMode !== null}
           weeklyId={weekly.id}
           sectorId={weekly.setor_id}
           existingTaskIds={weekly.tasks.map(t => t.task_id)}
-          onClose={() => setIsAddTaskModalOpen(false)}
+          defaultCompleted={addTaskModalMode === 'retrospectiva'}
+          onClose={() => setAddTaskModalMode(null)}
           onSuccess={async () => {
-            setIsAddTaskModalOpen(false);
+            setAddTaskModalMode(null);
             const updated = await refetch();
             if (updated) onWeeklyUpdated?.(updated);
           }}
         />
       )}
+
+      {/* Sheet de Resumo antes de confirmar o envio */}
+      <WeeklyReviewSummarySheet
+        isOpen={isReviewSheetOpen}
+        onClose={() => setIsReviewSheetOpen(false)}
+        onConfirmSubmit={() => {
+          setIsReviewSheetOpen(false);
+          submitMutation.execute();
+        }}
+        isSubmitting={submitMutation.isMutating}
+        semanaReferencia={weekly.semana_referencia}
+        retrospectiveTasks={retrospectiveTasks}
+        uncompletedRetrospectiveTasks={uncompletedRetrospectiveTasks}
+        plannedTasks={plannedTasks}
+        isRejeitada={weekly.status === 'REJEITADA'}
+      />
 
       {/* Modal W08 for evaluating weekly */}
       {isEvaluateModalOpen && (
@@ -581,6 +751,13 @@ export const WeeklyDetailView = ({
           onClose={() => setIsEvaluateModalOpen(false)}
           onSuccess={async updatedWeekly => {
             setIsEvaluateModalOpen(false);
+            if (isModal && onClose) {
+              onClose();
+              if (updatedWeekly) {
+                onWeeklyUpdated?.(updatedWeekly);
+              }
+              return;
+            }
             const refetched = await refetch();
             if (updatedWeekly) {
               onWeeklyUpdated?.(updatedWeekly);
