@@ -9,9 +9,7 @@ import {
   Home,
   LayoutDashboard,
   Link2,
-  ListTodo,
   PlaySquare,
-  Send,
   ShieldCheck,
   User,
   UserRoundPlus,
@@ -23,11 +21,10 @@ import type { NavigationLink } from '@/types/sidebar';
 
 const baseLinks: NavigationLink[] = [
   { to: '/', icon: Home, label: 'Dashboard' },
-  { to: '/weeklies', icon: FileText, label: 'Minhas weeklies' },
-  { to: '/tarefas', icon: ListTodo, label: 'Minhas tarefas' },
-  { to: '/setores', icon: FolderKanban, label: 'Setores' },
-  { to: '/presenca', icon: CheckSquare, label: 'Presença' },
+  { to: '/weeklies', icon: FileText, label: 'Weeklies' },
   { to: '/controle-horas', icon: Clock, label: 'Controle de horas' },
+  { to: '/presenca', icon: CheckSquare, label: 'Presença' },
+  { to: '/setores', icon: FolderKanban, label: 'Setores' },
   { to: '/perfil', icon: User, label: 'Perfil' },
 ];
 
@@ -65,10 +62,9 @@ export const adminLinks: NavigationLink[] = [
 export const superAdminLinks: NavigationLink[] = [...adminLinks];
 
 export const adminHybridLinks: NavigationLink[] = [
-  { to: '/minha-weekly', icon: Send, label: 'Enviar weekly' },
-  { to: '/weeklies', icon: FileText, label: 'Minhas weeklies' },
-  { to: '/tarefas', icon: ListTodo, label: 'Minhas tarefas' },
+  { to: '/weeklies', icon: FileText, label: 'Weeklies' },
   { to: '/controle-horas', icon: Clock, label: 'Controle de horas' },
+  { to: '/presenca', icon: CheckSquare, label: 'Presença' },
 ];
 
 export const pendingApprovalLinks = [

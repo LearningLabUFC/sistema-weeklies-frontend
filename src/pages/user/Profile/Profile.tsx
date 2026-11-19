@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import { CalendarDays, Clock, Mail, Pencil } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link, useInRouterContext } from 'react-router-dom';
 import { z } from 'zod';
 
 import Header from '@/components/layout/Header/Header';
@@ -50,6 +51,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const Profile = () => {
   const { showAlertDialog } = useAlertDialog();
+  const inRouter = useInRouterContext();
 
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -344,7 +346,24 @@ const Profile = () => {
         (!isAdminRole(profileData?.global_role) ||
           Boolean(profileData?.setores && profileData.setores.length > 0)) && (
           <Card className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-xs">
-            <CardContent className="p-6">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex justify-end">
+                {inRouter ? (
+                  <Link
+                    to="/weeklies"
+                    className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline"
+                  >
+                    Ir para o módulo Weeklies →
+                  </Link>
+                ) : (
+                  <a
+                    href="/weeklies"
+                    className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline"
+                  >
+                    Ir para o módulo Weeklies →
+                  </a>
+                )}
+              </div>
               <WarningsList mode="me" />
             </CardContent>
           </Card>

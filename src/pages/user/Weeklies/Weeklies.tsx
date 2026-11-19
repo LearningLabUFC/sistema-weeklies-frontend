@@ -5,7 +5,7 @@ import {
   Send,
   Sparkles,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import Header from '@/components/layout/Header/Header';
@@ -27,43 +27,38 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { isAdminRole, isSuperAdminRole } from '@/config/roles';
-import { sectorsApi } from '@/features/sectors/api/sectorsApi';
 import { useSectorContext } from '@/features/sectors/context/useSectorContext';
-import { weekliesApi } from '@/features/weeklies/api/weekliesApi';
 import { AddWeeklyTaskModal } from '@/features/weeklies/components/AddWeeklyTaskModal';
 import { MirroredUncompletedTasks } from '@/features/weeklies/components/MirroredUncompletedTasks';
 import { WeeklyReviewSummarySheet } from '@/features/weeklies/components/WeeklyReviewSummarySheet';
 import { WeeklyStatusBadge } from '@/features/weeklies/components/WeeklyStatusBadge';
 import { WeeklySubmissionBanner } from '@/features/weeklies/components/WeeklySubmissionBanner';
 import { WeeklyTaskItemCard } from '@/features/weeklies/components/WeeklyTaskItemCard';
-import {
-  formatDateCivil,
-  isRejeitadaWithinGracePeriod,
-} from '@/features/weeklies/utils/dateUtils';
-import {
-  getHerdadaReviewDecision,
-  type HerdadaDecisionMap,
-  partitionWeeklyTasks,
-} from '@/features/weeklies/utils/weeklyTaskSections';
-import { useAlertDialog } from '@/hooks/useAlertDialog';
-import { useAsyncMutation } from '@/hooks/useAsyncMutation';
+import { useCurrentWeekly } from '@/features/weeklies/hooks/useCurrentWeekly';
+import { formatDateCivil } from '@/features/weeklies/utils/dateUtils';
+import { getHerdadaReviewDecision } from '@/features/weeklies/utils/weeklyTaskSections';
 import { useAuth } from '@/hooks/useAuth';
-import { parseApiError } from '@/lib/errorHandler';
-import type { SectorDetail } from '@/types/sectors';
-import type { WeeklyResponse } from '@/types/weeklies';
 
-export default function Weeklies() {
+export interface WeekliesProps {
+  embedded?: boolean;
+}
+
+export default function Weeklies({ embedded = false }: WeekliesProps = {}) {
   const { user } = useAuth();
   const { selectedSectorId } = useSectorContext();
 
   // Cada contexto tem seu próprio estado, inclusive modais e mutações pendentes.
-  return <SectorWeeklies key={`${user?.id ?? ''}:${selectedSectorId ?? ''}`} />;
+  return (
+    <SectorWeeklies
+      key={`${user?.id ?? ''}:${selectedSectorId ?? ''}`}
+      embedded={embedded}
+    />
+  );
 }
 
-function SectorWeeklies() {
+function SectorWeeklies({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { showAlertDialog } = useAlertDialog();
   const {
     sectors,
     mySectors,
@@ -114,447 +109,41 @@ function SectorWeeklies() {
     setSelectedSectorId,
   ]);
 
-  const [weekly, setWeekly] = useState<WeeklyResponse | null>(null);
-  const [isLoadingWeekly, setIsLoadingWeekly] = useState(
-    Boolean(selectedSectorId && !isSuperAdmin),
-  );
-  const [weeklyNotFoundError, setWeeklyNotFoundError] = useState(false);
-  const [addTaskModalMode, setAddTaskModalMode] = useState<
-    'retrospectiva' | 'planejamento' | null
-  >(null);
-  const [herdadaDecisions, setHerdadaDecisions] = useState<HerdadaDecisionMap>(
-    {},
-  );
-  const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
-  const [activeMutationsCount, setActiveMutationsCount] = useState(0);
-  const isMounted = useRef(true);
-
-  // Mantém referência síncrona ao setor atual para checagens de respostas atrasadas
-  const selectedSectorIdRef = useRef(selectedSectorId);
-  useEffect(() => {
-    selectedSectorIdRef.current = selectedSectorId;
-  }, [selectedSectorId]);
-
-  // Reset síncrono durante a renderização ao trocar de setor
-  const [prevSectorId, setPrevSectorId] = useState(selectedSectorId);
-  if (prevSectorId !== selectedSectorId) {
-    setPrevSectorId(selectedSectorId);
-    setWeekly(null);
-    setAddTaskModalMode(null);
-    setHerdadaDecisions({});
-    setIsReviewSheetOpen(false);
-    setWeeklyNotFoundError(false);
-    setIsLoadingWeekly(Boolean(selectedSectorId && !isSuperAdmin));
-  }
-
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const [sectorDetail, setSectorDetail] = useState<SectorDetail | null>(null);
-
-  useEffect(() => {
-    if (!selectedSectorId) return;
-
-    let isCancelled = false;
-    sectorsApi
-      .getById(selectedSectorId)
-      .then(detail => {
-        if (!isCancelled && selectedSectorIdRef.current === selectedSectorId) {
-          setSectorDetail(detail);
-        }
-      })
-      .catch(() => {
-        if (!isCancelled && selectedSectorIdRef.current === selectedSectorId) {
-          setSectorDetail(null);
-        }
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [selectedSectorId]);
-
-  // Determina se o usuário é líder no setor selecionado ou admin
-  const isSectorLeader = Boolean(
-    sectorDetail?.membros?.some(m => m.id === user?.id && m.papel === 'lider'),
-  );
-  const isAdmin = isAdminRole(user?.global_role);
-  const canRemoveHerdada = isAdmin || isSectorLeader;
-
-  const [weeklyRefreshTrigger, setWeeklyRefreshTrigger] = useState(0);
-  const refreshCurrentWeekly = () => {
-    if (!isMounted.current) return;
-    setIsLoadingWeekly(true);
-    setWeeklyRefreshTrigger(t => t + 1);
-  };
-
-  useEffect(() => {
-    if (
-      !selectedSectorId ||
-      isSuperAdmin ||
-      (isAdminRole(user?.global_role) && !hasSectorLink)
-    ) {
-      return;
-    }
-
-    const currentSector = selectedSectorId;
-    let isCancelled = false;
-    weekliesApi
-      .getCurrentWeekly(currentSector)
-      .then(data => {
-        if (isCancelled || selectedSectorIdRef.current !== currentSector)
-          return;
-        setWeekly(data);
-        setWeeklyNotFoundError(false);
-        setIsLoadingWeekly(false);
-      })
-      .catch((err: unknown) => {
-        if (isCancelled || selectedSectorIdRef.current !== currentSector)
-          return;
-        const parsed = parseApiError(err);
-        if (parsed.isNotFound) {
-          setWeekly(null);
-          setWeeklyNotFoundError(true);
-        } else {
-          setWeekly(null);
-          showAlertDialog({
-            type: 'error',
-            title: 'Erro ao carregar weekly',
-            message: parsed.message,
-          });
-        }
-        setIsLoadingWeekly(false);
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [
-    selectedSectorId,
-    isSuperAdmin,
-    user?.global_role,
-    hasSectorLink,
-    weeklyRefreshTrigger,
-    showAlertDialog,
-  ]);
-
-  // Garante de forma estrita que nenhuma visualização ou ação acesse uma weekly
-  // pertencente a um setor diferente do atualmente selecionado
-  const currentWeekly =
-    weekly && selectedSectorId && weekly.setor_id === selectedSectorId
-      ? weekly
-      : null;
-
-  // Criação explícita de Weekly (W03)
-  const createWeeklyMutation = useAsyncMutation(
-    async () => {
-      const targetSectorId = selectedSectorIdRef.current;
-      if (!targetSectorId) {
-        throw new Error('Selecione um setor para criar a weekly.');
-      }
-      const newWeekly = await weekliesApi.create({ setor_id: targetSectorId });
-      return { newWeekly, targetSectorId };
-    },
-    {
-      onSuccess: ({ newWeekly, targetSectorId }) => {
-        // Ignora respostas atrasadas que não pertençam ao setor atualmente selecionado
-        if (
-          targetSectorId !== selectedSectorIdRef.current ||
-          newWeekly.setor_id !== selectedSectorIdRef.current
-        ) {
-          return;
-        }
-        setWeekly(newWeekly);
-        setWeeklyNotFoundError(false);
-        showAlertDialog({
-          type: 'success',
-          title: 'Weekly iniciada',
-          message:
-            'Relatório da semana criado com sucesso. Tarefas anteriores pendentes foram herdadas automaticamente.',
-        });
-      },
-    },
-  );
-
-  // Submissão da Weekly (W05)
-  const submitWeeklyMutation = useAsyncMutation(
-    async () => {
-      const currentSector = selectedSectorIdRef.current;
-      if (
-        !currentWeekly ||
-        !currentSector ||
-        currentWeekly.setor_id !== currentSector
-      ) {
-        throw new Error(
-          'O setor selecionado mudou. Aguarde o carregamento da weekly correspondente.',
-        );
-      }
-      if (isLoadingWeekly) {
-        throw new Error('Aguarde o carregamento da weekly correspondente.');
-      }
-      if (currentWeekly.tasks.length === 0) {
-        throw new Error(
-          'Adicione pelo menos uma tarefa à weekly para poder enviar o relatório.',
-        );
-      }
-      const targetSectorId = currentSector;
-      const targetWeeklyId = currentWeekly.id;
-      await weekliesApi.submit(targetWeeklyId);
-      return { targetSectorId };
-    },
-    {
-      onSuccess: ({ targetSectorId }) => {
-        if (targetSectorId !== selectedSectorIdRef.current) return;
-        setIsReviewSheetOpen(false);
-        setHerdadaDecisions({});
-        showAlertDialog({
-          type: 'success',
-          title: 'Weekly enviada',
-          message: 'Relatório enviado com sucesso para avaliação.',
-        });
-        refreshCurrentWeekly();
-      },
-      onError: err => {
-        showAlertDialog({
-          type: 'error',
-          title: 'Erro ao enviar weekly',
-          message: err.message,
-        });
-      },
-    },
-  );
-
-  // Reabertura da Weekly (W06)
-  const reopenWeeklyMutation = useAsyncMutation(
-    async () => {
-      const currentSector = selectedSectorIdRef.current;
-      if (
-        !currentWeekly ||
-        !currentSector ||
-        currentWeekly.setor_id !== currentSector
-      ) {
-        throw new Error(
-          'O setor selecionado mudou. Aguarde o carregamento da weekly correspondente.',
-        );
-      }
-      if (isLoadingWeekly) {
-        throw new Error('Aguarde o carregamento da weekly correspondente.');
-      }
-      const targetSectorId = currentSector;
-      const targetWeeklyId = currentWeekly.id;
-      await weekliesApi.reopen(targetWeeklyId);
-      return { targetSectorId };
-    },
-    {
-      onSuccess: ({ targetSectorId }) => {
-        if (targetSectorId !== selectedSectorIdRef.current) return;
-        showAlertDialog({
-          type: 'success',
-          title: 'Weekly reaberta',
-          message:
-            'Weekly reaberta com sucesso. Você pode editar as tarefas novamente.',
-        });
-        refreshCurrentWeekly();
-      },
-      onError: err => {
-        showAlertDialog({
-          type: 'error',
-          title: 'Erro ao reabrir weekly',
-          message: err.message,
-        });
-      },
-    },
-  );
-
-  // Atualização de item de tarefa (W10)
-  const handleUpdateTaskItem = async (
-    weeklyTaskId: string,
-    changes: { concluida?: boolean; impedimento?: string | null },
-  ) => {
-    const currentSector = selectedSectorIdRef.current;
-    if (
-      !isMounted.current ||
-      !currentWeekly ||
-      currentWeekly.setor_id !== currentSector
-    )
-      return;
-    const targetSectorId = currentSector;
-    const targetWeeklyId = currentWeekly.id;
-    try {
-      setActiveMutationsCount(c => c + 1);
-      const updated = await weekliesApi.updateTaskItem(
-        targetWeeklyId,
-        weeklyTaskId,
-        changes,
-      );
-      if (!isMounted.current || selectedSectorIdRef.current !== targetSectorId)
-        return;
-      // Atualiza localmente sem piscar
-      setWeekly(prev => {
-        if (
-          !prev ||
-          prev.id !== targetWeeklyId ||
-          prev.setor_id !== selectedSectorIdRef.current
-        )
-          return prev;
-        return {
-          ...prev,
-          tasks: prev.tasks.map(t => (t.id === weeklyTaskId ? updated : t)),
-        };
-      });
-    } catch (err) {
-      if (!isMounted.current || selectedSectorIdRef.current !== targetSectorId)
-        return;
-      showAlertDialog({
-        type: 'error',
-        title: 'Erro ao atualizar tarefa',
-        message:
-          err instanceof Error
-            ? err.message
-            : 'Não foi possível salvar as alterações na tarefa.',
-      });
-      // Re-fetch para sincronizar estado
-      if (selectedSectorIdRef.current === targetSectorId)
-        refreshCurrentWeekly();
-    } finally {
-      if (isMounted.current) setActiveMutationsCount(c => Math.max(0, c - 1));
-    }
-  };
-
-  // Remoção de vínculo da tarefa (W11)
-  const handleRemoveTaskItem = async (weeklyTaskId: string) => {
-    const currentSector = selectedSectorIdRef.current;
-    if (
-      !isMounted.current ||
-      !currentWeekly ||
-      currentWeekly.setor_id !== currentSector
-    )
-      return;
-    const targetSectorId = currentSector;
-    const targetWeeklyId = currentWeekly.id;
-    try {
-      setActiveMutationsCount(c => c + 1);
-      await weekliesApi.removeTaskItem(targetWeeklyId, weeklyTaskId);
-      if (!isMounted.current || selectedSectorIdRef.current !== targetSectorId)
-        return;
-      setWeekly(prev => {
-        if (
-          !prev ||
-          prev.id !== targetWeeklyId ||
-          prev.setor_id !== selectedSectorIdRef.current
-        )
-          return prev;
-        return {
-          ...prev,
-          tasks: prev.tasks.filter(t => t.id !== weeklyTaskId),
-        };
-      });
-      showAlertDialog({
-        type: 'success',
-        title: 'Tarefa removida',
-        message: 'A tarefa foi desvinculada desta weekly.',
-      });
-    } catch (err) {
-      if (!isMounted.current || selectedSectorIdRef.current !== targetSectorId)
-        return;
-      showAlertDialog({
-        type: 'error',
-        title: 'Erro ao remover tarefa',
-        message:
-          err instanceof Error
-            ? err.message
-            : 'Não foi possível remover a tarefa da weekly.',
-      });
-    } finally {
-      if (isMounted.current) setActiveMutationsCount(c => Math.max(0, c - 1));
-    }
-  };
-
-  // Estado de editabilidade
-  const isEditable = Boolean(
-    currentWeekly &&
-    (currentWeekly.status === 'RASCUNHO' ||
-      (currentWeekly.status === 'REJEITADA' &&
-        isRejeitadaWithinGracePeriod(currentWeekly.avaliada_em))),
-  );
-
-  const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
-
-  const handlePendingChange = useCallback(
-    (weeklyTaskId: string, hasPending: boolean) => {
-      setPendingTaskIds(prev => {
-        const next = new Set(prev);
-        if (hasPending) {
-          next.add(weeklyTaskId);
-        } else {
-          next.delete(weeklyTaskId);
-        }
-        return next;
-      });
-    },
-    [],
-  );
-
-  const canSubmit = Boolean(
-    currentWeekly &&
-    !isLoadingWeekly &&
+  const canFetchWeekly = Boolean(
     selectedSectorId &&
-    currentWeekly.setor_id === selectedSectorId &&
-    isEditable &&
-    currentWeekly.tasks.length > 0 &&
-    activeMutationsCount === 0 &&
-    pendingTaskIds.size === 0 &&
-    !submitWeeklyMutation.isMutating,
+    !isSuperAdmin &&
+    (!isAdminRole(user?.global_role) || hasSectorLink),
   );
 
-  const { retrospectiveTasks, uncompletedRetrospectiveTasks, plannedTasks } =
-    useMemo(
-      () =>
-        partitionWeeklyTasks(
-          currentWeekly?.tasks ?? [],
-          isEditable ? herdadaDecisions : undefined,
-        ),
-      [currentWeekly?.tasks, isEditable, herdadaDecisions],
-    );
-
-  const pendingHerdadaCount = useMemo(() => {
-    if (!isEditable) return 0;
-    return (currentWeekly?.tasks ?? [])
-      .filter(Boolean)
-      .filter(
-        t =>
-          t.origem === 'HERDADA' &&
-          getHerdadaReviewDecision(t, herdadaDecisions) === 'pendente',
-      ).length;
-  }, [isEditable, currentWeekly?.tasks, herdadaDecisions]);
-
-  const handleHerdadaDecision = async (
-    weeklyTaskId: string,
-    decision: 'concluida' | 'nao_concluida',
-  ) => {
-    setHerdadaDecisions(prev => ({ ...prev, [weeklyTaskId]: decision }));
-    await handleUpdateTaskItem(weeklyTaskId, {
-      concluida: decision === 'concluida',
-      ...(decision === 'concluida' ? { impedimento: null } : {}),
-    });
-  };
-
-  const handleOpenReviewSheet = () => {
-    if (pendingHerdadaCount > 0) {
-      showAlertDialog({
-        type: 'warning',
-        title: 'Revisão pendente',
-        message:
-          'Revise todas as tarefas herdadas da semana anterior (marcando como Concluída ou Não concluída) antes de enviar a weekly.',
-      });
-      return;
-    }
-    setIsReviewSheetOpen(true);
-  };
+  const {
+    currentWeekly,
+    isLoadingWeekly,
+    weeklyNotFoundError,
+    canRemoveHerdada,
+    createWeeklyMutation,
+    submitWeeklyMutation,
+    reopenWeeklyMutation,
+    handleUpdateTaskItem,
+    handleRemoveTaskItem,
+    handlePendingChange,
+    herdadaDecisions,
+    handleHerdadaDecision,
+    pendingHerdadaCount,
+    retrospectiveTasks,
+    uncompletedRetrospectiveTasks,
+    plannedTasks,
+    isEditable,
+    canSubmit,
+    addTaskModalMode,
+    setAddTaskModalMode,
+    isReviewSheetOpen,
+    setIsReviewSheetOpen,
+    handleOpenReviewSheet,
+    refreshCurrentWeekly,
+  } = useCurrentWeekly({
+    selectedSectorId,
+    enabled: canFetchWeekly,
+  });
 
   if (isPureAdmin) {
     return <Navigate to="/admin" replace />;
@@ -568,63 +157,71 @@ function SectorWeeklies() {
     );
   }
 
+  const containerClassName = embedded
+    ? 'w-full space-y-6'
+    : 'mx-auto w-full max-w-4xl py-6 sm:py-10 space-y-6';
+
   return (
-    <div className="mx-auto w-full max-w-4xl py-6 sm:py-10 space-y-6">
-      <Header
-        title="Relatório de Weekly"
-        subtitle="Acompanhe suas tarefas e registre seu progresso semanal por setor"
-      />
+    <div className={containerClassName}>
+      {!embedded && (
+        <>
+          <Header
+            title="Relatório de Weekly"
+            subtitle="Acompanhe suas tarefas e registre seu progresso semanal por setor"
+          />
 
-      {/* Seletor de Setor */}
-      <Card className="border-slate-200 dark:border-slate-800">
-        <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Setor de Atuação
-            </span>
-            <div className="flex items-center gap-2">
-              <FolderKanban className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                {selectedSector?.nome || 'Nenhum setor selecionado'}
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-72">
-            {isLoadingSectors ? (
-              <div className="flex items-center gap-2 text-xs text-slate-500 p-2 border rounded-md w-full">
-                <Spinner className="w-4 h-4 animate-spin" /> Carregando
-                setores...
+          {/* Seletor de Setor */}
+          <Card className="border-slate-200 dark:border-slate-800">
+            <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Setor de Atuação
+                </span>
+                <div className="flex items-center gap-2">
+                  <FolderKanban className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                    {selectedSector?.nome || 'Nenhum setor selecionado'}
+                  </h2>
+                </div>
               </div>
-            ) : allowedSectors.length === 0 ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/setores')}
-                className="w-full text-xs"
-              >
-                Explorar catálogo de setores
-              </Button>
-            ) : (
-              <Select
-                value={selectedSectorId || ''}
-                onValueChange={val => setSelectedSectorId(val || null)}
-              >
-                <SelectTrigger id="select-weekly-sector" className="w-full">
-                  <SelectValue placeholder="Selecione um setor..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {allowedSectors.map(s => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.nome} {!s.ativo && '(Inativo)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+
+              <div className="flex items-center gap-2 w-full sm:w-72">
+                {isLoadingSectors ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-500 p-2 border rounded-md w-full">
+                    <Spinner className="w-4 h-4 animate-spin" /> Carregando
+                    setores...
+                  </div>
+                ) : allowedSectors.length === 0 ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/setores')}
+                    className="w-full text-xs"
+                  >
+                    Explorar catálogo de setores
+                  </Button>
+                ) : (
+                  <Select
+                    value={selectedSectorId || ''}
+                    onValueChange={val => setSelectedSectorId(val || null)}
+                  >
+                    <SelectTrigger id="select-weekly-sector" className="w-full">
+                      <SelectValue placeholder="Selecione um setor..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allowedSectors.map(s => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.nome} {!s.ativo && '(Inativo)'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Caso o membro não pertença a nenhum setor */}
       {hasNoSector && (

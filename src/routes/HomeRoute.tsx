@@ -2,12 +2,12 @@ import { Navigate } from 'react-router-dom';
 
 import { isAdminRole } from '@/config/roles';
 import { useAuth } from '@/hooks/useAuth';
-import Weeklies from '@/pages/user/Weeklies/Weeklies';
+import Home from '@/pages/user/Home/Home';
 
 /**
  * Rota raiz inteligente (/):
  * - Administradores e Coordenadores (super_admin) são direcionados para o dashboard administrativo (/admin).
- * - Usuários comuns e líderes acessam o fluxo de Weeklies.
+ * - Usuários comuns e líderes acessam o Dashboard unificado.
  */
 export function HomeRoute() {
   const { user } = useAuth();
@@ -16,5 +16,5 @@ export function HomeRoute() {
     return <Navigate to="/admin" replace />;
   }
 
-  return <Weeklies />;
+  return <Home />;
 }

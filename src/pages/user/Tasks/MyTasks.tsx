@@ -38,7 +38,11 @@ import type { TaskResponse, TaskStatus } from '@/types/weeklies';
 
 type StatusFilter = 'TODOS' | TaskStatus;
 
-export default function MyTasks() {
+export interface MyTasksProps {
+  embedded?: boolean;
+}
+
+export default function MyTasks({ embedded = false }: MyTasksProps = {}) {
   const { sectors, mySectors, selectedSectorId } = useSectorContext();
 
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
@@ -50,6 +54,14 @@ export default function MyTasks() {
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('TODOS');
   const [page, setPage] = useState(1);
   const limit = 20;
+
+  const [prevContextSectorId, setPrevContextSectorId] =
+    useState(selectedSectorId);
+  if (embedded && prevContextSectorId !== selectedSectorId) {
+    setPrevContextSectorId(selectedSectorId);
+    setFilterSectorId(selectedSectorId || 'ALL');
+    setPage(1);
+  }
 
   // Garante que o filtro não selecione um setor ao qual o membro não pertença
   useEffect(() => {
@@ -133,28 +145,34 @@ export default function MyTasks() {
 
   const totalPages = Math.ceil(total / limit) || 1;
 
-  return (
-    <div className="mx-auto w-full max-w-5xl py-6 sm:py-10 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <Header
-          title="Tarefas e Colaboração"
-          subtitle="Gerencie suas tarefas pessoais e convites de colaboração"
-        />
+  const containerClassName = embedded
+    ? 'mx-auto w-full max-w-5xl space-y-6'
+    : 'mx-auto w-full max-w-5xl py-6 sm:py-10 space-y-6';
 
-        {activeTab === 'tasks' && (
-          <Button
-            type="button"
-            onClick={handleCreateClick}
-            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            Nova Tarefa (T02)
-          </Button>
-        )}
-      </div>
+  return (
+    <div className={containerClassName}>
+      {!embedded && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <Header
+            title="Tarefas e Colaboração"
+            subtitle="Gerencie suas tarefas pessoais e convites de colaboração"
+          />
+
+          {activeTab === 'tasks' && (
+            <Button
+              type="button"
+              onClick={handleCreateClick}
+              className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 self-start sm:self-auto"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Tarefa (T02)
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Tabs Switcher: Minhas Tarefas vs Convites de Colaboração */}
-      <div className="border-b border-slate-200 dark:border-slate-800">
+      <div className="border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -188,6 +206,18 @@ export default function MyTasks() {
             <span>Convites de Colaboração (C01-C03)</span>
           </button>
         </div>
+
+        {embedded && activeTab === 'tasks' && (
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleCreateClick}
+            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 mb-2 sm:mb-0"
+          >
+            <Plus className="w-4 h-4" />
+            Nova Tarefa (T02)
+          </Button>
+        )}
       </div>
 
       {activeTab === 'assignments' ? (

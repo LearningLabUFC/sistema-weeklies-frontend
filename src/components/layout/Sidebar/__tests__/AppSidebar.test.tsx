@@ -65,13 +65,24 @@ vi.mock('@/components/ui/sidebar', () => ({
     children,
     onClick,
     asChild,
+    isActive,
   }: {
     children: React.ReactNode;
     onClick?: () => void;
     asChild?: boolean;
+    isActive?: boolean;
   }) => {
-    if (asChild) return <div onClick={onClick}>{children}</div>;
-    return <button onClick={onClick}>{children}</button>;
+    if (asChild)
+      return (
+        <div data-active={isActive ? 'true' : 'false'} onClick={onClick}>
+          {children}
+        </div>
+      );
+    return (
+      <button data-active={isActive ? 'true' : 'false'} onClick={onClick}>
+        {children}
+      </button>
+    );
   },
 }));
 
@@ -241,9 +252,36 @@ describe('AppSidebar Component', () => {
 
     renderComponent();
 
-    expect(screen.getByText('Enviar weekly')).toBeInTheDocument();
-    expect(screen.getByText('Minhas weeklies')).toBeInTheDocument();
-    expect(screen.getByText('Minhas tarefas')).toBeInTheDocument();
+    expect(screen.getByText('Weeklies')).toBeInTheDocument();
     expect(screen.getByText('Controle de horas')).toBeInTheDocument();
+    expect(screen.getByText('Presença')).toBeInTheDocument();
+    expect(screen.queryByText('Enviar weekly')).not.toBeInTheDocument();
+    expect(screen.queryByText('Minhas tarefas')).not.toBeInTheDocument();
+  });
+
+  it('mantém o item Weeklies ativo em sub-rotas como /weeklies/historico', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { ...mockBaseUser, global_role: ROLE_IDS.USUARIO },
+      isAuthenticated: true,
+      logout: mockLogout,
+      login: vi.fn(),
+      registerUser: vi.fn(),
+      loading: false,
+      checkUserStatus: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/weeklies/historico']}>
+        <AppSidebar />
+      </MemoryRouter>,
+    );
+
+    const weekliesLink = screen.getByText('Weeklies').closest('[data-active]');
+    const dashboardLink = screen
+      .getByText('Dashboard')
+      .closest('[data-active]');
+
+    expect(weekliesLink).toHaveAttribute('data-active', 'true');
+    expect(dashboardLink).toHaveAttribute('data-active', 'false');
   });
 });

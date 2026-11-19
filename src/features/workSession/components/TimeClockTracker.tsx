@@ -14,7 +14,6 @@ import {
   Square,
   Timer as TimerIcon,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -45,94 +44,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
-import { useSectorContext } from '@/features/sectors/context/useSectorContext';
+import {
+  formatDate,
+  formatSecondsToHMS,
+  formatTime,
+  useWorkSession,
+} from '@/features/workSession/hooks/useWorkSession';
 import { cn } from '@/lib/utils';
-import { workSessionService } from '@/services/workSessionService';
-import type { Pause, WorkSessionDetail } from '@/types/workSession';
-
-interface FeedbackMessage {
-  type: 'error' | 'success' | 'info';
-  title?: string;
-  description: string;
-}
-
-/**
- * Formata segundos no formato HH:MM:SS
- */
-function formatSecondsToHMS(totalSeconds: number): string {
-  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  const seconds = safeSeconds % 60;
-
-  return [
-    hours.toString().padStart(2, '0'),
-    minutes.toString().padStart(2, '0'),
-    seconds.toString().padStart(2, '0'),
-  ].join(':');
-}
-
-/**
- * Formata ISO string em horário local (HH:mm)
- */
-function formatTime(isoString?: string | null): string {
-  if (!isoString) return '--:--';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return '--:--';
-  return date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-/**
- * Formata data completa legível
- */
-function formatDate(isoString?: string | null): string {
-  if (!isoString) return '---';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return '---';
-  return date.toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-  });
-}
-
-/**
- * Calcula o tempo trabalhado em segundos com base nos registros locais
- */
-function computeWorkedSeconds(session: WorkSessionDetail): number {
-  const entrada = new Date(session.entrada_em).getTime();
-  const expira = new Date(session.expira_em).getTime();
-  const saida = session.saida_em ? new Date(session.saida_em).getTime() : null;
-
-  // Limite superior do cálculo: saída (se encerrada) ou agora (limitado à expiração)
-  const agora = Date.now();
-  const tempoFinal = saida ? saida : Math.min(agora, expira);
-
-  if (isNaN(entrada) || tempoFinal <= entrada) return 0;
-
-  // Soma de pausas
-  let totalPausaMs = 0;
-  if (session.pausas && session.pausas.length > 0) {
-    for (const pausa of session.pausas) {
-      const inicio = new Date(pausa.inicio_em).getTime();
-      const fim = pausa.fim_em ? new Date(pausa.fim_em).getTime() : tempoFinal;
-      if (!isNaN(inicio) && fim > inicio) {
-        // Interseção com o período da sessão
-        const pausaInicioValida = Math.max(entrada, inicio);
-        const pausaFimValida = Math.min(tempoFinal, fim);
-        if (pausaFimValida > pausaInicioValida) {
-          totalPausaMs += pausaFimValida - pausaInicioValida;
-        }
-      }
-    }
-  }
-
-  const liquidoMs = tempoFinal - entrada - totalPausaMs;
-  return Math.max(0, Math.floor(liquidoMs / 1000));
-}
+import type { WorkSessionDetail } from '@/types/workSession';
 
 interface TimeClockTrackerProps {
   onSessionEnded?: (session: WorkSessionDetail | null) => void;
@@ -142,296 +61,24 @@ export const TimeClockTracker = ({
   onSessionEnded,
 }: TimeClockTrackerProps = {}) => {
   const {
-    mySectors,
-    sectors,
-    selectedSectorId: contextSectorId,
-  } = useSectorContext();
-
-  const [session, setSession] = useState<WorkSessionDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isActionLoading, setIsActionLoading] = useState(false);
-  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
-  const [seconds, setSeconds] = useState(0);
-  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
-
-  // Setor selecionado manualmente pelo usuário
-  const [userSelectedSectorId, setUserSelectedSectorId] = useState<
-    string | null
-  >(null);
-
-  // Setores ativos do usuário disponíveis para registrar ponto
-  const activeSectors = useMemo(() => {
-    return mySectors.filter(s => s.ativo !== false);
-  }, [mySectors]);
-
-  // Setor efetivo derivado: seleção manual válida, setor do contexto global ou primeiro ativo
-  const selectedSectorId = useMemo(() => {
-    if (
-      userSelectedSectorId &&
-      activeSectors.some(s => s.id === userSelectedSectorId)
-    ) {
-      return userSelectedSectorId;
-    }
-    if (contextSectorId && activeSectors.some(s => s.id === contextSectorId)) {
-      return contextSectorId;
-    }
-    return activeSectors[0]?.id || '';
-  }, [userSelectedSectorId, activeSectors, contextSectorId]);
-
-  // Busca a sessão atual no backend
-  const fetchCurrentSession = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const current = await workSessionService.getCurrentSession();
-      setSession(current);
-
-      if (current) {
-        setSeconds(computeWorkedSeconds(current));
-      } else {
-        setSeconds(0);
-      }
-    } catch (err: unknown) {
-      const errorMsg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail || 'Não foi possível carregar a sessão atual de ponto.';
-      setFeedback({
-        type: 'error',
-        title: 'Erro ao carregar sessão',
-        description: errorMsg,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadSession = async () => {
-      if (isMounted) {
-        await fetchCurrentSession();
-      }
-    };
-
-    loadSession();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fetchCurrentSession]);
-
-  // Cronômetro em tempo real
-  useEffect(() => {
-    if (!session || session.status !== 'ATIVA') return;
-
-    // Atualiza a cada segundo
-    const interval = setInterval(() => {
-      setSeconds(computeWorkedSeconds(session));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [session]);
-
-  // Relógio do componente para checagens temporais
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTimeMs(Date.now());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Encontra pausa em aberto se houver
-  const openPause = useMemo<Pause | undefined>(() => {
-    return session?.pausas?.find(p => !p.fim_em);
-  }, [session]);
-
-  // Nome do setor contabilizado na sessão atual
-  const currentSectorName = useMemo(() => {
-    if (!session?.setor_id) return null;
-    const found =
-      mySectors.find(s => s.id === session.setor_id) ||
-      sectors.find(s => s.id === session.setor_id);
-    return found?.nome || null;
-  }, [session, mySectors, sectors]);
-
-  const handleStartSession = async () => {
-    if (!selectedSectorId) {
-      setFeedback({
-        type: 'error',
-        title: 'Setor obrigatório',
-        description:
-          'Selecione um setor ativo para iniciar a contagem de horas.',
-      });
-      return;
-    }
-
-    setFeedback(null);
-    setIsActionLoading(true);
-    try {
-      const newSession =
-        await workSessionService.startSession(selectedSectorId);
-      setSession({
-        ...newSession,
-        pausas: [],
-      });
-      setSeconds(0);
-      setFeedback({
-        type: 'success',
-        title: 'Entrada registrada com sucesso!',
-        description: 'Sua jornada de trabalho foi iniciada.',
-      });
-    } catch (err: unknown) {
-      const detail =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail || 'Erro ao registrar entrada.';
-      setFeedback({
-        type: 'error',
-        title: 'Atenção',
-        description: detail,
-      });
-      // Sincroniza estado para verificar se já existe sessão aberta
-      fetchCurrentSession();
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  const handleTogglePause = async () => {
-    if (!session) return;
-    setFeedback(null);
-    setIsActionLoading(true);
-
-    try {
-      if (session.status === 'ATIVA') {
-        // Iniciar pausa
-        const novaPausa = await workSessionService.startPause(session.id);
-        setSession(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            status: 'EM_PAUSA',
-            pausas: [...(prev.pausas || []), novaPausa],
-          };
-        });
-        setFeedback({
-          type: 'info',
-          title: 'Intervalo iniciado',
-          description: 'A contagem de tempo foi congelada até o retorno.',
-        });
-      } else if (session.status === 'EM_PAUSA') {
-        // Encerrar pausa
-        if (!openPause) {
-          // Se não encontrou o id localmente, refaz a busca
-          await fetchCurrentSession();
-          return;
-        }
-
-        const pausaFinalizada = await workSessionService.endPause(
-          session.id,
-          openPause.id,
-        );
-
-        setSession(prev => {
-          if (!prev) return prev;
-          const atualizadas = (prev.pausas || []).map(p =>
-            p.id === pausaFinalizada.id ? pausaFinalizada : p,
-          );
-          return {
-            ...prev,
-            status: 'ATIVA',
-            pausas: atualizadas,
-          };
-        });
-        setFeedback({
-          type: 'success',
-          title: 'Intervalo finalizado',
-          description: 'Bem-vindo de volta! Contagem de horas retomada.',
-        });
-      }
-    } catch (err: unknown) {
-      const detail =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail || 'Erro ao atualizar status do intervalo.';
-      setFeedback({
-        type: 'error',
-        title: 'Atenção',
-        description: detail,
-      });
-      fetchCurrentSession();
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  const handleEndSession = async () => {
-    if (!session) return;
-    setFeedback(null);
-    setIsActionLoading(true);
-
-    try {
-      const finalizada = await workSessionService.endSession(session.id);
-      setSession(null);
-      setSeconds(0);
-      setFeedback({
-        type: 'success',
-        title: 'Saída registrada!',
-        description: `Sessão finalizada com sucesso. Tempo total computado: ${formatSecondsToHMS(
-          finalizada.tempo_trabalhado_segundos,
-        )}.`,
-      });
-
-      // Notifica componentes ouvintes (histórico e resumo)
-      onSessionEnded?.(session);
-    } catch (err: unknown) {
-      const detail =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail || 'Erro ao registrar saída.';
-      setFeedback({
-        type: 'error',
-        title: 'Atenção',
-        description: detail,
-      });
-      fetchCurrentSession();
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  const handleContinueSession = async () => {
-    if (!session) return;
-    setFeedback(null);
-    setIsActionLoading(true);
-
-    try {
-      const prorrogada = await workSessionService.continueSession(session.id);
-      setSession(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          expira_em: prorrogada.expira_em,
-        };
-      });
-      setFeedback({
-        type: 'success',
-        title: 'Jornada prorrogada!',
-        description: `Horário de expiração estendido em +2 horas (novo limite: ${formatTime(
-          prorrogada.expira_em,
-        )}).`,
-      });
-    } catch (err: unknown) {
-      const detail =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail || 'Erro ao prorrogar sessão.';
-      setFeedback({
-        type: 'error',
-        title: 'Atenção',
-        description: detail,
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
+    session,
+    isLoading,
+    isActionLoading,
+    feedback,
+    seconds,
+    setUserSelectedSectorId,
+    activeSectors,
+    selectedSectorId,
+    currentSectorName,
+    isSessionActive,
+    isSessionPaused,
+    hasOpenSession,
+    isNearExpiration,
+    handleStartSession,
+    handleTogglePause,
+    handleEndSession,
+    handleContinueSession,
+  } = useWorkSession({ onSessionEnded });
 
   if (isLoading) {
     return (
@@ -443,18 +90,6 @@ export const TimeClockTracker = ({
       </div>
     );
   }
-
-  const isSessionActive = session?.status === 'ATIVA';
-  const isSessionPaused = session?.status === 'EM_PAUSA';
-  const hasOpenSession = isSessionActive || isSessionPaused;
-
-  const msUntilExpiration = session
-    ? new Date(session.expira_em).getTime() - currentTimeMs
-    : 0;
-  const isNearExpiration =
-    hasOpenSession &&
-    msUntilExpiration > 0 &&
-    msUntilExpiration <= 10 * 60 * 1000;
 
   return (
     <div className="flex flex-col gap-6 w-full">

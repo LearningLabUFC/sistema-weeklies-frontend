@@ -11,8 +11,8 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/pages/user/Weeklies/Weeklies', () => ({
-  default: () => <div data-testid="mock-weeklies-page">Tela de Weeklies</div>,
+vi.mock('@/pages/user/Home/Home', () => ({
+  default: () => <div data-testid="mock-home-page">Dashboard Unificado</div>,
 }));
 
 describe('HomeRoute Component', () => {
@@ -46,7 +46,7 @@ describe('HomeRoute Component', () => {
     );
 
     expect(screen.getByText('Painel Admin')).toBeInTheDocument();
-    expect(screen.queryByTestId('mock-weeklies-page')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mock-home-page')).not.toBeInTheDocument();
   });
 
   it('deve redirecionar para /admin se o usuário for admin', () => {
@@ -75,10 +75,10 @@ describe('HomeRoute Component', () => {
     );
 
     expect(screen.getByText('Painel Admin')).toBeInTheDocument();
-    expect(screen.queryByTestId('mock-weeklies-page')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mock-home-page')).not.toBeInTheDocument();
   });
 
-  it('deve renderizar a tela de Weeklies se o usuário for membro comum', () => {
+  it('deve renderizar o Dashboard Home se o usuário for membro comum', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: {
         id: 'user-1',
@@ -103,7 +103,7 @@ describe('HomeRoute Component', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId('mock-weeklies-page')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-home-page')).toBeInTheDocument();
     expect(screen.queryByText('Painel Admin')).not.toBeInTheDocument();
   });
 });

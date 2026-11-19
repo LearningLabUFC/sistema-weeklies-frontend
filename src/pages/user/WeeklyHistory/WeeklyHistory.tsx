@@ -1,5 +1,5 @@
 import { AlertCircle, FileText, Filter, RefreshCw } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 
 import Header from '@/components/layout/Header/Header';
 import EmptyState from '@/components/shared/EmptyState/EmptyState';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { sectorsApi } from '@/features/sectors/api/sectorsApi';
+import { SectorContext } from '@/features/sectors/context/sectorContextDef';
 import { weekliesApi } from '@/features/weeklies/api/weekliesApi';
 import { WeeklyPagination } from '@/features/weeklies/components/Pagination';
 import { WeeklyDetailModal } from '@/features/weeklies/components/WeeklyDetailModal';
@@ -24,18 +25,41 @@ import type { WeeklyStatus, WeeklySummaryResponse } from '@/types/weeklies';
 
 const ITEMS_PER_PAGE = 10;
 
-const WeeklyHistory = () => {
+export interface WeeklyHistoryProps {
+  embedded?: boolean;
+}
+
+const WeeklyHistory = ({ embedded = false }: WeeklyHistoryProps = {}) => {
+  const sectorContext = useContext(SectorContext);
+  const contextSectorId = sectorContext?.selectedSectorId ?? null;
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedSectorId, setSelectedSectorId] = useState<string>('todos');
+  const [selectedSectorId, setSelectedSectorId] = useState<string>(() =>
+    embedded && contextSectorId ? contextSectorId : 'todos',
+  );
   const [selectedStatus, setSelectedStatus] = useState<string>('TODOS');
   const [selectedWeeklyId, setSelectedWeeklyId] = useState<string | null>(null);
+
+  const [prevContextSectorId, setPrevContextSectorId] =
+    useState(contextSectorId);
+  if (embedded && prevContextSectorId !== contextSectorId) {
+    setPrevContextSectorId(contextSectorId);
+    setSelectedSectorId(contextSectorId || 'todos');
+    setCurrentPage(1);
+  }
 
   // List user's sectors for the filter
   const fetchSectors = useCallback(async () => {
     return sectorsApi.list({ limite: 100 });
   }, []);
-  const { data: sectorsData } = useAsyncQuery(fetchSectors);
+  const { data: sectorsData } = useAsyncQuery(fetchSectors, {
+    enabled: !embedded || !sectorContext?.mySectors?.length,
+  });
   const sectors: SectorListItem[] = sectorsData?.setores || [];
+  const filterSectorOptions =
+    sectorContext?.mySectors && sectorContext.mySectors.length > 0
+      ? sectorContext.mySectors
+      : sectors;
 
   // W01: Get user's weeklies with server pagination and filters
   const sectorParam =
@@ -86,19 +110,32 @@ const WeeklyHistory = () => {
 
   // Find sector name helper
   const getSectorName = (sectorId: string) => {
-    const found = sectors.find(s => s.id === sectorId);
+    const found =
+      sectorContext?.mySectors?.find(s => s.id === sectorId) ||
+      sectorContext?.sectors?.find(s => s.id === sectorId) ||
+      sectors.find(s => s.id === sectorId);
     return found ? found.nome : undefined;
   };
 
+  const containerClassName = embedded
+    ? 'w-full max-w-4xl mx-auto space-y-6'
+    : 'w-full max-w-4xl mx-auto px-4 sm:px-0 py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500';
+
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 sm:px-0 py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <Header
-        title="Minhas weeklies"
-        subtitle="Histórico completo de relatórios semanais enviados e avaliados"
-      />
+    <div className={containerClassName}>
+      {!embedded && (
+        <Header
+          title="Minhas weeklies"
+          subtitle="Histórico completo de relatórios semanais enviados e avaliados"
+        />
+      )}
 
       {/* Filter Controls Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 mt-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div
+        className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 ${
+          embedded ? 'mt-0' : 'mt-6'
+        }`}
+      >
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Filter className="w-4 h-4 text-indigo-500 shrink-0" />
@@ -113,7 +150,7 @@ const WeeklyHistory = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os setores</SelectItem>
-                {sectors.map(sector => (
+                {filterSectorOptions.map(sector => (
                   <SelectItem key={sector.id} value={sector.id}>
                     {sector.nome}
                   </SelectItem>

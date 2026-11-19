@@ -87,7 +87,11 @@ const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {links.map(link => {
-                const isActive = location.pathname === link.to;
+                const isActive =
+                  link.to === '/' || link.to === '/admin'
+                    ? location.pathname === link.to
+                    : location.pathname === link.to ||
+                      location.pathname.startsWith(`${link.to}/`);
                 return (
                   <SidebarMenuItem key={link.to}>
                     <SidebarMenuButton

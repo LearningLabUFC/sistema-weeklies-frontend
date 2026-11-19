@@ -1,4 +1,4 @@
-import { type RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router-dom';
 
 import Presence from '@/pages/user/Presence/Presence';
 import Profile from '@/pages/user/Profile/Profile';
@@ -8,6 +8,7 @@ import SectorTracking from '@/pages/user/Sectors/SectorTracking';
 import MyTasks from '@/pages/user/Tasks/MyTasks';
 import TimeClock from '@/pages/user/TimeClock/TimeClock';
 import Weeklies from '@/pages/user/Weeklies/Weeklies';
+import WeekliesLayout from '@/pages/user/Weeklies/WeekliesLayout';
 import WeeklyDetailPage from '@/pages/user/WeeklyHistory/WeeklyDetailPage';
 import WeeklyHistory from '@/pages/user/WeeklyHistory/WeeklyHistory';
 import { HomeRoute } from '@/routes/HomeRoute';
@@ -18,20 +19,34 @@ export const userRoutes: RouteObject[] = [
     element: <HomeRoute />,
   },
   {
-    path: 'minha-weekly',
-    element: <Weeklies />,
-  },
-  {
     path: 'weeklies',
-    element: <WeeklyHistory />,
+    element: <WeekliesLayout />,
+    children: [
+      {
+        index: true,
+        element: <Weeklies embedded />,
+      },
+      {
+        path: 'historico',
+        element: <WeeklyHistory embedded />,
+      },
+      {
+        path: 'tarefas',
+        element: <MyTasks embedded />,
+      },
+    ],
   },
   {
     path: 'weeklies/:weeklyId',
     element: <WeeklyDetailPage />,
   },
   {
+    path: 'minha-weekly',
+    element: <Navigate to="/weeklies" replace />,
+  },
+  {
     path: 'tarefas',
-    element: <MyTasks />,
+    element: <Navigate to="/weeklies/tarefas" replace />,
   },
   {
     path: 'setores',
