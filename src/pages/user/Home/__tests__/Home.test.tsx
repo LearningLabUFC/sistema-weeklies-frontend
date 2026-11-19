@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,6 +11,7 @@ import { assignmentsApi } from '@/features/weeklies/api/assignmentsApi';
 import { tasksApi } from '@/features/weeklies/api/tasksApi';
 import { warningsApi } from '@/features/weeklies/api/warningsApi';
 import { weekliesApi } from '@/features/weeklies/api/weekliesApi';
+import * as dateUtils from '@/features/weeklies/utils/dateUtils';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAuth } from '@/hooks/useAuth';
 import Home from '@/pages/user/Home/Home';
@@ -38,6 +39,7 @@ vi.mock('@/features/weeklies/api/weekliesApi', () => ({
   weekliesApi: {
     getCurrentWeekly: vi.fn(),
     create: vi.fn(),
+    reopen: vi.fn(),
     getSectorWeeklies: vi.fn(),
   },
 }));
@@ -58,6 +60,7 @@ vi.mock('@/services/workSessionService', () => ({
   workSessionService: {
     getCurrentSession: vi.fn(),
     getSummary: vi.fn(),
+    getHistory: vi.fn(),
     startSession: vi.fn(),
     startPause: vi.fn(),
     endPause: vi.fn(),
@@ -151,12 +154,17 @@ describe('Home Dashboard Page', () => {
     refreshSectors: vi.fn(),
   };
 
+  let mockAlertConfig: { onConfirm?: () => Promise<void> | void } = {};
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetMockPresenceStore();
+    mockAlertConfig = {};
 
     vi.mocked(useAlertDialog).mockReturnValue({
-      showAlertDialog: vi.fn(),
+      showAlertDialog: vi.fn(config => {
+        mockAlertConfig = config;
+      }),
       hideAlertDialog: vi.fn(),
     });
 
@@ -184,6 +192,35 @@ describe('Home Dashboard Page', () => {
       inicio: '2026-11-16T00:00:00Z',
       fim: '2026-11-22T23:59:59Z',
       tempo_trabalhado_segundos: 7200,
+    });
+    vi.mocked(workSessionService.getHistory).mockResolvedValue({
+      sessoes: [
+        {
+          id: 'sess-prev-1',
+          usuario_id: 'user-1',
+          setor_id: 'sec-1',
+          entrada_em: '2026-11-18T14:00:00Z',
+          saida_em: '2026-11-18T16:30:00Z',
+          expira_em: '2026-11-18T22:00:00Z',
+          status: 'FINALIZADA',
+          motivo_encerramento: 'MANUAL',
+          tempo_trabalhado_segundos: 9000,
+        },
+        {
+          id: 'sess-prev-2',
+          usuario_id: 'user-1',
+          setor_id: 'sec-1',
+          entrada_em: '2026-11-17T09:00:00Z',
+          saida_em: '2026-11-17T10:30:00Z',
+          expira_em: '2026-11-17T17:00:00Z',
+          status: 'FINALIZADA',
+          motivo_encerramento: 'MANUAL',
+          tempo_trabalhado_segundos: 5400,
+        },
+      ],
+      total: 2,
+      pagina: 1,
+      limite: 4,
     });
     vi.mocked(warningsApi.getMyWarnings).mockResolvedValue({
       advertencias: [],
@@ -240,6 +277,14 @@ describe('Home Dashboard Page', () => {
     expect(await screen.findByText('Continuar editando')).toBeInTheDocument();
     expect(screen.getByText('Esta semana:')).toBeInTheDocument();
     expect(screen.getByText('2h 00m')).toBeInTheDocument();
+
+    // Histórico dos 2 pontos anteriores no controle de horas
+    expect(screen.getByText('Pontos recentes')).toBeInTheDocument();
+    expect(await screen.findAllByTestId('recent-clock-session')).toHaveLength(
+      2,
+    );
+    expect(screen.getByText('2h 30m')).toBeInTheDocument();
+    expect(screen.getByText('1h 30m')).toBeInTheDocument();
 
     // Presença: chamada aberta + 3 últimas reuniões
     expect(
@@ -345,6 +390,41 @@ describe('Home Dashboard Page', () => {
 
     await waitFor(() => {
       expect(weekliesApi.create).toHaveBeenCalledWith({ setor_id: 'sec-1' });
+      expect(screen.getByText('Editor Weekly')).toBeInTheDocument();
+    });
+  });
+
+  it('exibe botão de reabrir weekly quando status for ENVIADA e dentro da janela, navegando para /weeklies ao confirmar', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(dateUtils, 'dentroDaJanela').mockReturnValue(true);
+
+    const enviadaWeekly: WeeklyResponse = {
+      ...mockWeekly,
+      status: 'ENVIADA',
+      enviada_em: '2026-11-18T12:00:00Z',
+    };
+    vi.mocked(weekliesApi.getCurrentWeekly).mockResolvedValue(enviadaWeekly);
+    vi.mocked(weekliesApi.reopen).mockResolvedValueOnce({
+      ...enviadaWeekly,
+      status: 'RASCUNHO',
+    });
+
+    renderHome();
+
+    const reopenBtn = await screen.findByRole('button', {
+      name: /reabrir weekly/i,
+    });
+    expect(reopenBtn).toBeInTheDocument();
+
+    await user.click(reopenBtn);
+    expect(mockAlertConfig.onConfirm).toBeDefined();
+
+    await act(async () => {
+      await mockAlertConfig.onConfirm!();
+    });
+
+    expect(weekliesApi.reopen).toHaveBeenCalledWith('weekly-1');
+    await waitFor(() => {
       expect(screen.getByText('Editor Weekly')).toBeInTheDocument();
     });
   });

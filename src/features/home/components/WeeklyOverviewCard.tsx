@@ -6,6 +6,7 @@ import {
   FileText,
   FolderKanban,
   ListChecks,
+  RotateCcw,
   Sparkles,
 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -28,12 +29,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { useSectorContext } from '@/features/sectors/context/useSectorContext';
 import { WeeklyReviewSummarySheet } from '@/features/weeklies/components/WeeklyReviewSummarySheet';
 import { WeeklyStatusBadge } from '@/features/weeklies/components/WeeklyStatusBadge';
 import { WeeklyStatusCta } from '@/features/weeklies/components/WeeklyStatusCta';
 import { useCurrentWeekly } from '@/features/weeklies/hooks/useCurrentWeekly';
-import { formatDateCivil } from '@/features/weeklies/utils/dateUtils';
+import {
+  dentroDaJanela,
+  formatDateCivil,
+} from '@/features/weeklies/utils/dateUtils';
+import { useAlertDialog } from '@/hooks/useAlertDialog';
 
 export function WeeklyOverviewCard() {
   const navigate = useNavigate();
@@ -58,11 +64,14 @@ export function WeeklyOverviewCard() {
     }
   }, [isLoadingSectors, mySectors, selectedSectorId, setSelectedSectorId]);
 
+  const { showAlertDialog } = useAlertDialog();
+
   const {
     currentWeekly,
     isLoadingWeekly,
     weeklyNotFoundError,
     createWeeklyMutation,
+    reopenWeeklyMutation,
     retrospectiveTasks,
     uncompletedRetrospectiveTasks,
     plannedTasks,
@@ -74,6 +83,25 @@ export function WeeklyOverviewCard() {
     selectedSectorId,
     enabled: Boolean(selectedSectorId),
   });
+
+  const canReopen = currentWeekly?.status === 'ENVIADA' && dentroDaJanela();
+
+  const handleReopen = () => {
+    showAlertDialog({
+      type: 'confirm',
+      title: 'Reabrir Weekly',
+      message:
+        'Deseja reabrir este relatório semanal? Ele voltará ao status de Rascunho para você poder editar antes do fechamento da janela.',
+      confirmText: 'Reabrir',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        const result = await reopenWeeklyMutation.execute();
+        if (result) {
+          navigate('/weeklies');
+        }
+      },
+    });
+  };
 
   const handleCreateAndOpen = async () => {
     const result = await createWeeklyMutation.execute();
@@ -275,6 +303,15 @@ export function WeeklyOverviewCard() {
                 </div>
               </div>
             </div>
+
+            {canReopen && (
+              <div className="p-3 rounded-xl border border-sky-200 bg-sky-50/60 dark:border-sky-900/60 dark:bg-sky-950/20 text-xs text-sky-800 dark:text-sky-300 flex items-center justify-between gap-2">
+                <span>
+                  Janela de submissão aberta · Weekly enviada e aguardando
+                  avaliação. Se precisar fazer ajustes, você pode reabri-la.
+                </span>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
@@ -301,6 +338,24 @@ export function WeeklyOverviewCard() {
                 >
                   <Eye className="w-3.5 h-3.5" />
                   Visualizar resumo
+                </Button>
+              )}
+
+              {canReopen && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReopen}
+                  disabled={reopenWeeklyMutation.isMutating}
+                  className="gap-1.5 text-xs text-amber-700 hover:text-amber-800 border-amber-300 dark:border-amber-800 dark:text-amber-300"
+                >
+                  {reopenWeeklyMutation.isMutating ? (
+                    <Spinner className="w-3.5 h-3.5" />
+                  ) : (
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  )}
+                  Reabrir weekly
                 </Button>
               )}
 

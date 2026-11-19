@@ -9,7 +9,7 @@ import {
   RotateCcw,
   Square,
 } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import {
@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
+import { useSectorContext } from '@/features/sectors/context/useSectorContext';
 import {
   formatDurationSummary,
   formatSecondsToHMS,
@@ -51,9 +52,36 @@ import { useAsyncQuery } from '@/hooks/useAsyncQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { workSessionService } from '@/services/workSessionService';
 
+function formatDate(isoString: string): string {
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '---';
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+function formatTime(isoString?: string | null): string {
+  if (!isoString) return '--:--';
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '--:--';
+  return date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatSessionDuration(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds));
+  if (safe < 60) return `${safe}s`;
+  return formatDurationSummary(safe);
+}
+
 export function QuickTimeClockCard() {
   const { user } = useAuth();
   const userId = user?.id;
+  const { sectors } = useSectorContext();
 
   const fetchWeeklySummary = useCallback(async () => {
     const range = getWeekRange();
@@ -69,6 +97,20 @@ export function QuickTimeClockCard() {
     isLoading: isLoadingSummary,
     refetch: refetchWeeklySummary,
   } = useAsyncQuery(fetchWeeklySummary);
+
+  const fetchRecentHistory = useCallback(async () => {
+    return workSessionService.getHistory({
+      limite: 4,
+      pagina: 1,
+      ...(userId ? { usuario_id: userId } : {}),
+    });
+  }, [userId]);
+
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory,
+  } = useAsyncQuery(fetchRecentHistory);
 
   const weeklySeconds = weeklySummary?.tempo_trabalhado_segundos ?? 0;
 
@@ -90,8 +132,24 @@ export function QuickTimeClockCard() {
   } = useWorkSession({
     onSessionEnded: () => {
       void refetchWeeklySummary();
+      void refetchHistory();
     },
   });
+
+  const recentSessions = useMemo(() => {
+    if (!historyData?.sessoes) return [];
+    return historyData.sessoes
+      .filter(s => s.status === 'FINALIZADA' || s.status === 'EXPIRADA_SISTEMA')
+      .slice(0, 2);
+  }, [historyData]);
+
+  const getSectorName = useCallback(
+    (sectorId: string) => {
+      const found = sectors.find(s => s.id === sectorId);
+      return found?.nome || 'Setor';
+    },
+    [sectors],
+  );
 
   const weeklyGoalHours = user?.meta_horas_semanais ?? 12;
   const weeklyGoalSeconds = Math.max(1, weeklyGoalHours * 3600);
@@ -312,6 +370,70 @@ export function QuickTimeClockCard() {
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
+            </div>
+
+            {/* Pontos recentes (2 anteriores) */}
+            <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Pontos recentes
+              </p>
+              {isLoadingHistory ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-11 w-full rounded-xl" />
+                  <Skeleton className="h-11 w-full rounded-xl" />
+                </div>
+              ) : recentSessions.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-3 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Nenhum ponto registrado anteriormente
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                  {recentSessions.map(session => (
+                    <div
+                      key={session.id}
+                      data-testid="recent-clock-session"
+                      className="px-3.5 py-2.5 flex items-center justify-between gap-3 bg-slate-50/40 dark:bg-slate-900/50"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                            {formatDate(session.entrada_em)}
+                          </span>
+                          <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                            {getSectorName(session.setor_id)}
+                          </span>
+                          {session.status === 'EXPIRADA_SISTEMA' && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] text-amber-700 bg-amber-50 border-amber-300 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800 px-1.5 py-0"
+                            >
+                              Expirada (8h)
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          {formatTime(session.entrada_em)} às{' '}
+                          {session.saida_em
+                            ? formatTime(session.saida_em)
+                            : 'Em aberto'}
+                        </p>
+                      </div>
+
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] font-semibold bg-white dark:bg-slate-800 shrink-0 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                      >
+                        {formatSessionDuration(
+                          session.tempo_trabalhado_segundos,
+                        )}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
