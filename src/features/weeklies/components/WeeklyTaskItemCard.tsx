@@ -48,7 +48,7 @@ export function WeeklyTaskItemCard({
   onRemove,
   onPendingChange,
   disabled = false,
-  sectionMode = 'retrospectiva',
+  sectionMode,
   herdadaReviewDecision,
   onHerdadaReviewDecision,
 }: WeeklyTaskItemCardProps) {
@@ -209,16 +209,18 @@ export function WeeklyTaskItemCard({
                 </span>
               )}
 
-              <Badge
-                variant="outline"
-                className={`text-[11px] px-1.5 py-0 font-medium ${
-                  taskItem.origem === 'NOVA'
-                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300'
-                    : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
-                }`}
-              >
-                {taskItem.origem === 'NOVA' ? 'Nova' : 'Herdada'}
-              </Badge>
+              {sectionMode !== 'retrospectiva' && (
+                <Badge
+                  variant="outline"
+                  className={`text-[11px] px-1.5 py-0 font-medium ${
+                    taskItem.origem === 'NOVA'
+                      ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300'
+                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
+                  }`}
+                >
+                  {taskItem.origem === 'NOVA' ? 'Nova' : 'Herdada'}
+                </Badge>
+              )}
 
               {isHerdadaReviewMode &&
                 effectiveHerdadaDecision === 'pendente' && (

@@ -147,9 +147,9 @@ export function WeeklyReviewSummarySheet({
                       </div>
                       <Badge
                         variant="outline"
-                        className="text-[10px] px-1.5 py-0 border-sky-300 bg-sky-100/70 text-sky-800 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300 shrink-0"
+                        className="text-[10px] px-1.5 py-0 border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300 shrink-0"
                       >
-                        Não concluída — continuação
+                        Herdada
                       </Badge>
                     </div>
 

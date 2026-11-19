@@ -142,13 +142,6 @@ function ContinuationTaskItem({
               Herdada
             </Badge>
 
-            <Badge
-              variant="outline"
-              className="text-[11px] px-1.5 py-0 font-medium border-sky-300 bg-sky-100/70 text-sky-800 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
-            >
-              Não concluída — continuação
-            </Badge>
-
             {taskItem.prazo_conclusao && (
               <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                 <Calendar className="w-3 h-3 text-slate-400" />
