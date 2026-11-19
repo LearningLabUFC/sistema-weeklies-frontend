@@ -523,11 +523,13 @@ function SectorWeeklies() {
 
   const pendingHerdadaCount = useMemo(() => {
     if (!isEditable) return 0;
-    return (currentWeekly?.tasks ?? []).filter(
-      t =>
-        t.origem === 'HERDADA' &&
-        getHerdadaReviewDecision(t, herdadaDecisions) === 'pendente',
-    ).length;
+    return (currentWeekly?.tasks ?? [])
+      .filter(Boolean)
+      .filter(
+        t =>
+          t.origem === 'HERDADA' &&
+          getHerdadaReviewDecision(t, herdadaDecisions) === 'pendente',
+      ).length;
   }, [isEditable, currentWeekly?.tasks, herdadaDecisions]);
 
   const handleHerdadaDecision = async (
