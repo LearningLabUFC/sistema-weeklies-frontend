@@ -568,7 +568,18 @@ export const WeeklyDetailView = ({
         </CardHeader>
 
         <CardContent className="p-4 sm:p-6 space-y-4">
-          <MirroredUncompletedTasks tasks={uncompletedRetrospectiveTasks} />
+          <MirroredUncompletedTasks
+            tasks={uncompletedRetrospectiveTasks}
+            isEditable={isEditable}
+            disabled={submitMutation.isMutating || reopenMutation.isMutating}
+            canRemoveHerdada={canLeaderRemoveTasks}
+            onRemove={handleRemoveTask}
+            onUpdate={handleUpdateTask}
+            onHerdadaReviewDecision={
+              isEditable ? handleHerdadaDecision : undefined
+            }
+            onPendingChange={handlePendingChange}
+          />
 
           {plannedTasks.length === 0 &&
           uncompletedRetrospectiveTasks.length === 0 ? (
@@ -712,7 +723,9 @@ export const WeeklyDetailView = ({
           isOpen={addTaskModalMode !== null}
           weeklyId={weekly.id}
           sectorId={weekly.setor_id}
-          existingTaskIds={weekly.tasks.map(t => t.task_id)}
+          existingTaskIds={(weekly.tasks || [])
+            .map(t => t?.task_id)
+            .filter((id): id is string => Boolean(id))}
           defaultCompleted={addTaskModalMode === 'retrospectiva'}
           onClose={() => setAddTaskModalMode(null)}
           onSuccess={async () => {

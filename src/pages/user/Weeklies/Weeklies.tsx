@@ -833,7 +833,19 @@ function SectorWeeklies() {
             </CardHeader>
 
             <CardContent className="p-4 sm:p-6 space-y-4">
-              <MirroredUncompletedTasks tasks={uncompletedRetrospectiveTasks} />
+              <MirroredUncompletedTasks
+                tasks={uncompletedRetrospectiveTasks}
+                isEditable={isEditable}
+                disabled={
+                  reopenWeeklyMutation.isMutating ||
+                  createWeeklyMutation.isMutating
+                }
+                canRemoveHerdada={canRemoveHerdada}
+                onRemove={handleRemoveTaskItem}
+                onUpdate={handleUpdateTaskItem}
+                onHerdadaReviewDecision={handleHerdadaDecision}
+                onPendingChange={handlePendingChange}
+              />
 
               {plannedTasks.length === 0 &&
               uncompletedRetrospectiveTasks.length === 0 ? (
@@ -926,7 +938,9 @@ function SectorWeeklies() {
           onClose={() => setAddTaskModalMode(null)}
           weeklyId={currentWeekly.id}
           sectorId={currentWeekly.setor_id}
-          existingTaskIds={currentWeekly.tasks.map(t => t.task_id)}
+          existingTaskIds={(currentWeekly.tasks || [])
+            .map(t => t?.task_id)
+            .filter((id): id is string => Boolean(id))}
           defaultCompleted={addTaskModalMode === 'retrospectiva'}
           onSuccess={() => {
             refreshCurrentWeekly();

@@ -1,10 +1,4 @@
-import {
-  AlertCircle,
-  Calendar,
-  CheckCircle2,
-  Send,
-  XCircle,
-} from 'lucide-react';
+import { AlertCircle, Calendar, CheckCircle2, Send } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,9 +44,6 @@ export function WeeklyReviewSummarySheet({
   readOnly = false,
 }: WeeklyReviewSummarySheetProps) {
   const completedRetrospective = retrospectiveTasks.filter(t => t.concluida);
-  const notCompletedRetrospective = retrospectiveTasks.filter(
-    t => !t.concluida,
-  );
 
   return (
     <Sheet open={isOpen} onOpenChange={open => !open && onClose()}>
@@ -79,14 +70,16 @@ export function WeeklyReviewSummarySheet({
                 O que fiz na semana anterior
               </h4>
               <span className="text-[11px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                {retrospectiveTasks.length}{' '}
-                {retrospectiveTasks.length === 1 ? 'item' : 'itens'}
+                {completedRetrospective.length}{' '}
+                {completedRetrospective.length === 1
+                  ? 'item entregue'
+                  : 'itens entregues'}
               </span>
             </div>
 
-            {retrospectiveTasks.length === 0 ? (
+            {completedRetrospective.length === 0 ? (
               <p className="text-xs text-slate-500 border border-dashed rounded-lg p-3 text-center">
-                Nenhuma entrega da semana anterior registrada.
+                Nenhuma entrega concluída da semana anterior registrada.
               </p>
             ) : (
               <div className="space-y-2">
@@ -107,34 +100,6 @@ export function WeeklyReviewSummarySheet({
                     >
                       Concluída
                     </Badge>
-                  </div>
-                ))}
-
-                {notCompletedRetrospective.map(task => (
-                  <div
-                    key={`summary-pending-${task.id}`}
-                    className="rounded-lg border border-rose-200 bg-rose-50/60 dark:border-rose-900/60 dark:bg-rose-950/20 p-3 space-y-1.5"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start gap-2 min-w-0">
-                        <XCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                        <span className="text-xs font-medium text-slate-900 dark:text-slate-100">
-                          {task.titulo}
-                        </span>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 border-rose-300 bg-rose-100/70 text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300 shrink-0"
-                      >
-                        Não concluída
-                      </Badge>
-                    </div>
-                    {task.impedimento && (
-                      <div className="flex items-start gap-1.5 text-[11px] text-amber-800 dark:text-amber-300 bg-white/70 dark:bg-slate-900/60 px-2 py-1 rounded">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
-                        <span>Impedimento: {task.impedimento}</span>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -166,25 +131,34 @@ export function WeeklyReviewSummarySheet({
                 {uncompletedRetrospectiveTasks.map(task => (
                   <div
                     key={`summary-next-carried-${task.id}`}
-                    className="rounded-lg border border-sky-200 bg-sky-50/60 dark:border-sky-900/50 dark:bg-sky-950/20 p-3 flex items-start justify-between gap-2"
+                    className="rounded-lg border border-sky-200 bg-sky-50/60 dark:border-sky-900/50 dark:bg-sky-950/20 p-3 space-y-1.5"
                   >
-                    <div className="space-y-0.5 min-w-0">
-                      <span className="text-xs font-medium text-slate-900 dark:text-slate-100 block">
-                        {`↪ ${task.titulo}`}
-                      </span>
-                      {task.prazo_conclusao && (
-                        <span className="flex items-center gap-1 text-[11px] text-slate-500">
-                          <Calendar className="w-3 h-3" />
-                          Prazo: {formatDateCivil(task.prazo_conclusao)}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5 min-w-0">
+                        <span className="text-xs font-medium text-slate-900 dark:text-slate-100 block">
+                          {`↪ ${task.titulo}`}
                         </span>
-                      )}
+                        {task.prazo_conclusao && (
+                          <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                            <Calendar className="w-3 h-3" />
+                            Prazo: {formatDateCivil(task.prazo_conclusao)}
+                          </span>
+                        )}
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0 border-sky-300 bg-sky-100/70 text-sky-800 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300 shrink-0"
+                      >
+                        Não concluída — continuação
+                      </Badge>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-sky-300 bg-sky-100/70 text-sky-800 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300 shrink-0"
-                    >
-                      Não concluída — continuação
-                    </Badge>
+
+                    {task.impedimento && (
+                      <div className="flex items-start gap-1.5 text-[11px] text-amber-800 dark:text-amber-300 bg-white/70 dark:bg-slate-900/60 px-2 py-1 rounded">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+                        <span>Impedimento: {task.impedimento}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
 
