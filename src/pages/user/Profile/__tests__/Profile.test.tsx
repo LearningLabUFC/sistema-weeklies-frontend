@@ -42,7 +42,10 @@ describe('Profile Page Component', () => {
     });
   });
 
-  const mockUserProfile = (roleId: string) => ({
+  const mockUserProfile = (
+    roleId: string,
+    setores: string[] = ['Desenvolvimento'],
+  ) => ({
     id: 'user-1',
     nome_completo: 'Fulano da Silva',
     email: 'fulano@ufc.br',
@@ -54,7 +57,7 @@ describe('Profile Page Component', () => {
     curso_id: 'curso-1',
     status_id: 'status-1',
     global_role: roleId,
-    setores: ['Desenvolvimento'],
+    setores,
   });
 
   it('deve renderizar a seção de advertências pessoais para membros comuns (usuario)', async () => {
@@ -87,9 +90,9 @@ describe('Profile Page Component', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('não deve renderizar a seção de advertências pessoais para administrador', async () => {
+  it('não deve renderizar a seção de advertências pessoais para administrador sem setor', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
-      data: { usuario: mockUserProfile(ROLE_IDS.ADMIN) },
+      data: { usuario: mockUserProfile(ROLE_IDS.ADMIN, []) },
     });
 
     render(<Profile />);
@@ -101,5 +104,19 @@ describe('Profile Page Component', () => {
     expect(
       screen.queryByTestId('mock-warnings-list-me'),
     ).not.toBeInTheDocument();
+  });
+
+  it('deve renderizar a seção de advertências pessoais para administrador vinculado a setor', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: { usuario: mockUserProfile(ROLE_IDS.ADMIN, ['Desenvolvimento']) },
+    });
+
+    render(<Profile />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fulano da Silva')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('mock-warnings-list-me')).toBeInTheDocument();
   });
 });

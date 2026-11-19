@@ -11,6 +11,7 @@ import {
   Link2,
   ListTodo,
   PlaySquare,
+  Send,
   ShieldCheck,
   User,
   UserRoundPlus,
@@ -62,6 +63,13 @@ export const adminLinks: NavigationLink[] = [
 ];
 
 export const superAdminLinks: NavigationLink[] = [...adminLinks];
+
+export const adminHybridLinks: NavigationLink[] = [
+  { to: '/minha-weekly', icon: Send, label: 'Enviar weekly' },
+  { to: '/weeklies', icon: FileText, label: 'Minhas weeklies' },
+  { to: '/tarefas', icon: ListTodo, label: 'Minhas tarefas' },
+  { to: '/controle-horas', icon: Clock, label: 'Controle de horas' },
+];
 
 export const pendingApprovalLinks = [
   {

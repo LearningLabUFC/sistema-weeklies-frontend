@@ -5,9 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import AppSidebar from '@/components/layout/Sidebar/AppSidebar';
 import { ROLE_IDS } from '@/config/roles';
+import { useSectorContext } from '@/features/sectors/context/useSectorContext';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAuth } from '@/hooks/useAuth';
 import type { User } from '@/types/user';
+
+vi.mock('@/features/sectors/context/useSectorContext', () => ({
+  useSectorContext: vi.fn(),
+}));
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -99,6 +104,21 @@ describe('AppSidebar Component', () => {
       showAlertDialog: mockShowAlertDialog,
       hideAlertDialog: vi.fn(),
     });
+
+    vi.mocked(useSectorContext).mockReturnValue({
+      mySectors: [],
+      sectors: [],
+      selectedSectorId: null,
+      selectedSectorName: null,
+      selectedSector: null,
+      isMemberOf: vi.fn(),
+      getMyRole: vi.fn(),
+      selectSector: vi.fn(),
+      setSelectedSectorId: vi.fn(),
+      clearSelectedSector: vi.fn(),
+      isLoading: false,
+      refreshSectors: vi.fn(),
+    });
   });
 
   afterEach(() => {
@@ -183,5 +203,47 @@ describe('AppSidebar Component', () => {
     fireEvent.click(link);
 
     expect(mockSetOpenMobile).toHaveBeenCalledWith(false);
+  });
+
+  it('deve exibir atalhos operacionais quando administrador possuir vínculo com setores', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { ...mockBaseUser, global_role: ROLE_IDS.ADMIN },
+      isAuthenticated: true,
+      logout: mockLogout,
+      login: vi.fn(),
+      registerUser: vi.fn(),
+      loading: false,
+      checkUserStatus: vi.fn(),
+    });
+
+    vi.mocked(useSectorContext).mockReturnValue({
+      mySectors: [
+        {
+          id: 'sec-1',
+          nome: 'Desenvolvimento',
+          descricao: 'Setor',
+          ativo: true,
+          papel: 'lider',
+        },
+      ],
+      sectors: [],
+      selectedSectorId: 'sec-1',
+      selectedSectorName: 'Desenvolvimento',
+      selectedSector: null,
+      isMemberOf: vi.fn(),
+      getMyRole: vi.fn(),
+      selectSector: vi.fn(),
+      setSelectedSectorId: vi.fn(),
+      clearSelectedSector: vi.fn(),
+      isLoading: false,
+      refreshSectors: vi.fn(),
+    });
+
+    renderComponent();
+
+    expect(screen.getByText('Enviar weekly')).toBeInTheDocument();
+    expect(screen.getByText('Minhas weeklies')).toBeInTheDocument();
+    expect(screen.getByText('Minhas tarefas')).toBeInTheDocument();
+    expect(screen.getByText('Controle de horas')).toBeInTheDocument();
   });
 });

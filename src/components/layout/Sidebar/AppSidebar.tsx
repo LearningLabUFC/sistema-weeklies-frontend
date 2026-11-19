@@ -15,8 +15,10 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { images } from '@/config/images';
+import { useSectorContext } from '@/features/sectors/context/useSectorContext';
 import { useAlertDialog } from '@/hooks/useAlertDialog';
 import { useAuth } from '@/hooks/useAuth';
+import type { UserSectorItem } from '@/types/sectors';
 import { getNavigationLinks, getRoleDetails } from '@/utils/navigationLinks';
 
 const AppSidebar = () => {
@@ -27,11 +29,20 @@ const AppSidebar = () => {
   const { setOpenMobile, isMobile } = useSidebar();
   const { showAlertDialog } = useAlertDialog();
 
+  let mySectors: UserSectorItem[];
+  try {
+    const sectorCtx = useSectorContext();
+    mySectors = sectorCtx?.mySectors ?? [];
+  } catch {
+    mySectors = [];
+  }
+
   if (!user) return null;
 
   const role = user.global_role;
   const { label, color } = getRoleDetails(role);
-  const links = getNavigationLinks(role);
+  const hasSectors = Boolean(mySectors && mySectors.length > 0);
+  const links = getNavigationLinks(role, { hasSectors });
 
   const handleLogout = () => {
     showAlertDialog({

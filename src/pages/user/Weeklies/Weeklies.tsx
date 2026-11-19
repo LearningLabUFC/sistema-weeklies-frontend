@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
-import { isAdminRole } from '@/config/roles';
+import { isAdminRole, isSuperAdminRole } from '@/config/roles';
 import { sectorsApi } from '@/features/sectors/api/sectorsApi';
 import { useSectorContext } from '@/features/sectors/context/useSectorContext';
 import { weekliesApi } from '@/features/weeklies/api/weekliesApi';
@@ -80,6 +80,12 @@ function SectorWeeklies() {
     return sectors;
   }, [mySectors, sectors]);
 
+  const isSuperAdmin = isSuperAdminRole(user?.global_role);
+  const hasSectorLink = Boolean(mySectors && mySectors.length > 0);
+  const isPureAdmin =
+    isSuperAdmin ||
+    (!isLoadingSectors && isAdminRole(user?.global_role) && !hasSectorLink);
+
   const hasNoSector =
     !isLoadingSectors &&
     !isAdminRole(user?.global_role) &&
@@ -87,7 +93,7 @@ function SectorWeeklies() {
     mySectors.length === 0;
 
   useEffect(() => {
-    if (isAdminRole(user?.global_role) || isLoadingSectors) return;
+    if (isSuperAdmin || isLoadingSectors) return;
     if (mySectors !== undefined) {
       if (mySectors.length > 0) {
         if (
@@ -101,7 +107,7 @@ function SectorWeeklies() {
       }
     }
   }, [
-    user?.global_role,
+    isSuperAdmin,
     isLoadingSectors,
     mySectors,
     selectedSectorId,
@@ -110,7 +116,7 @@ function SectorWeeklies() {
 
   const [weekly, setWeekly] = useState<WeeklyResponse | null>(null);
   const [isLoadingWeekly, setIsLoadingWeekly] = useState(
-    Boolean(selectedSectorId && !isAdminRole(user?.global_role)),
+    Boolean(selectedSectorId && !isSuperAdmin),
   );
   const [weeklyNotFoundError, setWeeklyNotFoundError] = useState(false);
   const [addTaskModalMode, setAddTaskModalMode] = useState<
@@ -138,9 +144,7 @@ function SectorWeeklies() {
     setHerdadaDecisions({});
     setIsReviewSheetOpen(false);
     setWeeklyNotFoundError(false);
-    setIsLoadingWeekly(
-      Boolean(selectedSectorId && !isAdminRole(user?.global_role)),
-    );
+    setIsLoadingWeekly(Boolean(selectedSectorId && !isSuperAdmin));
   }
 
   useEffect(() => {
@@ -189,7 +193,11 @@ function SectorWeeklies() {
   };
 
   useEffect(() => {
-    if (!selectedSectorId || isAdmin) {
+    if (
+      !selectedSectorId ||
+      isSuperAdmin ||
+      (isAdminRole(user?.global_role) && !hasSectorLink)
+    ) {
       return;
     }
 
@@ -225,7 +233,14 @@ function SectorWeeklies() {
     return () => {
       isCancelled = true;
     };
-  }, [selectedSectorId, isAdmin, weeklyRefreshTrigger, showAlertDialog]);
+  }, [
+    selectedSectorId,
+    isSuperAdmin,
+    user?.global_role,
+    hasSectorLink,
+    weeklyRefreshTrigger,
+    showAlertDialog,
+  ]);
 
   // Garante de forma estrita que nenhuma visualização ou ação acesse uma weekly
   // pertencente a um setor diferente do atualmente selecionado
@@ -508,12 +523,12 @@ function SectorWeeklies() {
 
   const pendingHerdadaCount = useMemo(() => {
     if (!isEditable) return 0;
-    return retrospectiveTasks.filter(
+    return (currentWeekly?.tasks ?? []).filter(
       t =>
         t.origem === 'HERDADA' &&
         getHerdadaReviewDecision(t, herdadaDecisions) === 'pendente',
     ).length;
-  }, [isEditable, retrospectiveTasks, herdadaDecisions]);
+  }, [isEditable, currentWeekly?.tasks, herdadaDecisions]);
 
   const handleHerdadaDecision = async (
     weeklyTaskId: string,
@@ -539,8 +554,16 @@ function SectorWeeklies() {
     setIsReviewSheetOpen(true);
   };
 
-  if (isAdmin) {
+  if (isPureAdmin) {
     return <Navigate to="/admin" replace />;
+  }
+
+  if (isLoadingSectors && isAdminRole(user?.global_role)) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
   }
 
   return (
