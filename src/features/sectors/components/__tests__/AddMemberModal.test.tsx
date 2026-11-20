@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sectorsApi } from '@/features/sectors/api/sectorsApi';
 import { AddMemberModal } from '@/features/sectors/components/AddMemberModal';
@@ -45,8 +45,12 @@ describe('AddMemberModal Component', () => {
     });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('deve carregar usuários ativos e permitir submissão', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const onSuccess = vi.fn();
     const onClose = vi.fn();
 
@@ -63,11 +67,7 @@ describe('AddMemberModal Component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(api.get).toHaveBeenCalled();
-    });
-
-    const triggers = screen.getAllByRole('combobox');
+    const triggers = await screen.findAllByRole('combobox');
     await user.click(triggers[0]);
     await user.keyboard('{Enter}');
 
@@ -151,15 +151,13 @@ describe('AddMemberModal Component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('2 disponíveis')).toBeInTheDocument();
-    });
-
+    expect(await screen.findByText('2 disponíveis')).toBeInTheDocument();
     expect(api.get).toHaveBeenCalledTimes(2);
   });
 
   it('exibe alerta de erro na tela quando requisição falha e permite repetir', async () => {
-    const user = userEvent.setup();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const user = userEvent.setup({ delay: null });
     vi.mocked(api.get).mockRejectedValueOnce(
       new Error('Erro interno ao buscar usuários do sistema'),
     );
@@ -173,11 +171,9 @@ describe('AddMemberModal Component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Erro interno ao buscar usuários do sistema/i),
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText(/Erro interno ao buscar usuários do sistema/i),
+    ).toBeInTheDocument();
 
     // Simula recuperação na segunda tentativa
     vi.mocked(api.get).mockResolvedValueOnce({
@@ -231,10 +227,7 @@ describe('AddMemberModal Component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('1 disponível')).toBeInTheDocument();
-    });
-
+    expect(await screen.findByText('1 disponível')).toBeInTheDocument();
     expect(screen.queryByText(/Super Administrador/i)).not.toBeInTheDocument();
   });
 });

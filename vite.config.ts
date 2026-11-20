@@ -12,6 +12,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    environmentMatchGlobs: [
+      // Testes puros (.test.ts) não precisam carregar a DOM do JSDOM
+      ['**/*.test.ts', 'node'],
+    ],
     setupFiles: './vitest.setup.ts',
   },
   resolve: {

@@ -29,7 +29,7 @@ describe('SectorModal Component', () => {
   });
 
   it('deve validar nome obrigatório no envio', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<SectorModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} />);
 
     const submitBtn = screen.getByRole('button', { name: /criar setor/i });
@@ -41,7 +41,7 @@ describe('SectorModal Component', () => {
   });
 
   it('deve chamar create ao submeter novo setor', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const onSuccess = vi.fn();
     const onClose = vi.fn();
     vi.mocked(sectorsApi.create).mockResolvedValueOnce({
@@ -67,7 +67,7 @@ describe('SectorModal Component', () => {
   });
 
   it('deve enviar descricao vazia como "" ao limpar descrição na edição', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const onSuccess = vi.fn();
     const onClose = vi.fn();
     vi.mocked(sectorsApi.update).mockResolvedValueOnce({
