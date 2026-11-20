@@ -103,7 +103,7 @@ describe('TaskModal Component', () => {
   });
 
   it('desabilita o campo de prazo para membros comuns e não chama updatePrazo ao salvar alterações de título/descrição', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const handleSuccess = vi.fn();
 
     vi.mocked(tasksApi.update).mockResolvedValueOnce({
@@ -156,7 +156,7 @@ describe('TaskModal Component', () => {
   });
 
   it('permite que o líder do setor edite o prazo e chama updatePrazo se houver alteração', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const handleSuccess = vi.fn();
 
     // Usuário é líder no setor da task
@@ -213,7 +213,7 @@ describe('TaskModal Component', () => {
   });
 
   it('permite que o administrador edite o prazo de qualquer tarefa', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const handleSuccess = vi.fn();
 
     vi.mocked(tasksApi.update).mockResolvedValueOnce(mockTask);
@@ -250,7 +250,7 @@ describe('TaskModal Component', () => {
   });
 
   it('permite que membros definam prazo na criação de nova tarefa', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const handleSuccess = vi.fn();
 
     vi.mocked(tasksApi.create).mockResolvedValueOnce(mockTask);

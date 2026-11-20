@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AlertDialogProvider } from '@/context/AlertDialogProvider';
 import { tasksApi } from '@/features/weeklies/api/tasksApi';
@@ -53,6 +53,10 @@ describe('InviteCollaboratorModal', () => {
     });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renderiza o título, campo de busca e lista de colaboradores elegíveis', async () => {
     renderWithProviders(<InviteCollaboratorModal {...defaultProps} />);
 
@@ -66,54 +70,41 @@ describe('InviteCollaboratorModal', () => {
       screen.getByPlaceholderText(/Buscar por nome, e-mail ou matrícula.../i),
     ).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(screen.getByText('Maria Desenvolvedora')).toBeInTheDocument();
-      expect(screen.getByText('João Designer')).toBeInTheDocument();
-      expect(screen.getByText('123456')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Maria Desenvolvedora')).toBeInTheDocument();
+    expect(screen.getByText('João Designer')).toBeInTheDocument();
+    expect(screen.getByText('123456')).toBeInTheDocument();
   });
 
   it('permite selecionar um colaborador e exibe o card de confirmação com dados', async () => {
     renderWithProviders(<InviteCollaboratorModal {...defaultProps} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Maria Desenvolvedora')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Maria Desenvolvedora')).toBeInTheDocument();
 
     const selectBtn = screen.getByText('Maria Desenvolvedora');
     fireEvent.click(selectBtn);
 
-    await waitFor(() => {
-      expect(screen.getByText('Colaborador selecionado:')).toBeInTheDocument();
-      expect(screen.getByText('maria@lab.ufc.br')).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /trocar/i }),
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText('Colaborador selecionado:'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('maria@lab.ufc.br')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /trocar/i })).toBeInTheDocument();
   });
 
   it('permite trocar o colaborador selecionado para escolher outro', async () => {
     renderWithProviders(<InviteCollaboratorModal {...defaultProps} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Maria Desenvolvedora')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Maria Desenvolvedora')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Maria Desenvolvedora'));
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /trocar/i }),
-      ).toBeInTheDocument();
-    });
+    const changeBtn = await screen.findByRole('button', { name: /trocar/i });
+    fireEvent.click(changeBtn);
 
-    fireEvent.click(screen.getByRole('button', { name: /trocar/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByPlaceholderText(/Buscar por nome, e-mail ou matrícula.../i),
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByPlaceholderText(
+        /Buscar por nome, e-mail ou matrícula.../i,
+      ),
+    ).toBeInTheDocument();
   });
 
   it('envia convite com sucesso para o colaborador selecionado e chama onSuccess', async () => {
@@ -132,9 +123,7 @@ describe('InviteCollaboratorModal', () => {
 
     renderWithProviders(<InviteCollaboratorModal {...defaultProps} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Maria Desenvolvedora')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Maria Desenvolvedora')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Maria Desenvolvedora'));
 
@@ -153,15 +142,14 @@ describe('InviteCollaboratorModal', () => {
   });
 
   it('exibe alerta de erro quando a API rejeita a atribuição', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(tasksApi.assign).mockRejectedValue(
       new Error('Já existe um convite pendente para este membro nesta tarefa.'),
     );
 
     renderWithProviders(<InviteCollaboratorModal {...defaultProps} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Maria Desenvolvedora')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Maria Desenvolvedora')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Maria Desenvolvedora'));
 
@@ -170,12 +158,10 @@ describe('InviteCollaboratorModal', () => {
     });
     fireEvent.click(submitBtn);
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          'Já existe um convite pendente para este membro nesta tarefa.',
-        ),
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText(
+        'Já existe um convite pendente para este membro nesta tarefa.',
+      ),
+    ).toBeInTheDocument();
   });
 });
