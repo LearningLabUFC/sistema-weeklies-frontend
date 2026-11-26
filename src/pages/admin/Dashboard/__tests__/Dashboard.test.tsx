@@ -116,12 +116,18 @@ describe('Admin Dashboard (D02)', () => {
       expect(screen.getByText('Engenharia de Software')).toBeInTheDocument();
     });
 
-    const select = screen.getByLabelText(/semana de referência/i);
-    fireEvent.change(select, { target: { value: '2026-09-21' } });
+    const select = screen.getByLabelText(
+      /semana de referência/i,
+    ) as HTMLSelectElement;
+    const options = Array.from(select.options);
+    expect(options.length).toBeGreaterThan(1);
+
+    const targetWeek = options[1].value;
+    fireEvent.change(select, { target: { value: targetWeek } });
 
     await waitFor(() => {
       expect(dashboardApi.getGlobalDashboard).toHaveBeenCalledWith({
-        semana_referencia: '2026-09-21',
+        semana_referencia: targetWeek,
       });
     });
   });
