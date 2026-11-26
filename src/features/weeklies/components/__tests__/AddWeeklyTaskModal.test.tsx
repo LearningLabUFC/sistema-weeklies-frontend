@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { tasksApi } from '@/features/weeklies/api/tasksApi';
 import { weekliesApi } from '@/features/weeklies/api/weekliesApi';
@@ -56,8 +56,12 @@ describe('AddWeeklyTaskModal Component', () => {
     });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('permite criar nova tarefa inline na weekly (W09)', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     vi.mocked(weekliesApi.addTask).mockResolvedValueOnce({
       id: 'wt-1',
       task_id: 'new-task-1',
@@ -108,7 +112,7 @@ describe('AddWeeklyTaskModal Component', () => {
   });
 
   it('permite vincular tarefa existente pendente à weekly (W09)', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     vi.mocked(weekliesApi.addTask).mockResolvedValueOnce({
       id: 'wt-2',
       task_id: 'task-1',
