@@ -1,6 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { api } from '@/lib/api';
+import {
+  makeMetricsSectorsResponse,
+  makeMetricsSummaryResponse,
+  makeMetricsTimelineResponse,
+  makeMetricsUsersResponse,
+  makePause,
+  makeWorkSession,
+  makeWorkSessionDetail,
+  makeWorkSessionsHistoryResponse,
+  makeWorkSessionSummaryResponse,
+} from '@/services/__tests__/factories/workSessionFactory';
 import { workSessionService } from '@/services/workSessionService';
 import type {
   CurrentWorkSessionResponse,
@@ -10,15 +21,7 @@ import type {
   GetMetricsUsersParams,
   GetWorkSessionsParams,
   GetWorkSessionSummaryParams,
-  MetricsSectorsResponse,
-  MetricsSummaryResponse,
-  MetricsTimelineResponse,
-  MetricsUsersResponse,
-  Pause,
   WorkSession,
-  WorkSessionDetail,
-  WorkSessionsHistoryResponse,
-  WorkSessionSummaryResponse,
 } from '@/types/workSession';
 
 vi.mock('@/lib/api', () => ({
@@ -34,24 +37,8 @@ describe('workSessionService', () => {
     vi.clearAllMocks();
   });
 
-  const mockWorkSession: WorkSession = {
-    id: 'session-uuid-1',
-    usuario_id: 'user-uuid-1',
-    setor_id: 'sector-uuid-1',
-    entrada_em: '2026-09-26T11:00:00Z',
-    saida_em: null,
-    expira_em: '2026-09-26T19:00:00Z',
-    status: 'ATIVA',
-    motivo_encerramento: null,
-    tempo_trabalhado_segundos: 0,
-  };
-
-  const mockPause: Pause = {
-    id: 'pause-uuid-1',
-    sessao_id: 'session-uuid-1',
-    inicio_em: '2026-09-26T13:00:00Z',
-    fim_em: null,
-  };
+  const mockWorkSession = makeWorkSession();
+  const mockPause = makePause();
 
   describe('startSession (POST /work-sessions)', () => {
     it('deve registrar uma nova entrada com sucesso (happy path)', async () => {
@@ -109,10 +96,7 @@ describe('workSessionService', () => {
 
   describe('endPause (PATCH /work-sessions/{id}/pauses/{pause_id}/end)', () => {
     it('deve encerrar uma pausa com sucesso e retornar status atualizado', async () => {
-      const endedPause: Pause = {
-        ...mockPause,
-        fim_em: '2026-09-26T13:30:00Z',
-      };
+      const endedPause = makePause({ fim_em: '2026-09-26T13:30:00Z' });
       vi.mocked(api.patch).mockResolvedValueOnce({ data: endedPause });
 
       const result = await workSessionService.endPause(
@@ -143,13 +127,12 @@ describe('workSessionService', () => {
 
   describe('endSession (PATCH /work-sessions/{id}/end)', () => {
     it('deve registrar saída com status FINALIZADA e motivo MANUAL', async () => {
-      const finalizada: WorkSession = {
-        ...mockWorkSession,
+      const finalizada: WorkSession = makeWorkSession({
         saida_em: '2026-09-26T15:00:00Z',
         status: 'FINALIZADA',
         motivo_encerramento: 'MANUAL',
         tempo_trabalhado_segundos: 12600,
-      };
+      });
       vi.mocked(api.patch).mockResolvedValueOnce({ data: finalizada });
 
       const result = await workSessionService.endSession('session-uuid-1');
@@ -179,10 +162,9 @@ describe('workSessionService', () => {
 
   describe('continueSession (PATCH /work-sessions/{id}/continue)', () => {
     it('deve prorrogar o horário de expiração da sessão com sucesso', async () => {
-      const prorrogada: WorkSession = {
-        ...mockWorkSession,
-        expira_em: '2026-09-26T21:00:00Z', // +2 horas
-      };
+      const prorrogada: WorkSession = makeWorkSession({
+        expira_em: '2026-09-26T21:00:00Z',
+      });
       vi.mocked(api.patch).mockResolvedValueOnce({ data: prorrogada });
 
       const result = await workSessionService.continueSession('session-uuid-1');
@@ -213,10 +195,7 @@ describe('workSessionService', () => {
 
   describe('getCurrentSession (GET /work-sessions/current)', () => {
     it('deve retornar os detalhes da sessão aberta atual', async () => {
-      const sessionDetail: WorkSessionDetail = {
-        ...mockWorkSession,
-        pausas: [],
-      };
+      const sessionDetail = makeWorkSessionDetail();
       const apiResponse: CurrentWorkSessionResponse = {
         sessao: sessionDetail,
       };
@@ -243,10 +222,9 @@ describe('workSessionService', () => {
 
   describe('getSessionById (GET /work-sessions/{id})', () => {
     it('deve retornar os dados da sessão pelo id', async () => {
-      const sessionDetail: WorkSessionDetail = {
-        ...mockWorkSession,
+      const sessionDetail = makeWorkSessionDetail({
         pausas: [mockPause],
-      };
+      });
       vi.mocked(api.get).mockResolvedValueOnce({ data: sessionDetail });
 
       const result = await workSessionService.getSessionById('session-uuid-1');
@@ -272,12 +250,7 @@ describe('workSessionService', () => {
 
   describe('getHistory (GET /work-sessions)', () => {
     it('deve listar o histórico de sessões sem parâmetros', async () => {
-      const historyResponse: WorkSessionsHistoryResponse = {
-        sessoes: [mockWorkSession],
-        total: 1,
-        pagina: 1,
-        limite: 20,
-      };
+      const historyResponse = makeWorkSessionsHistoryResponse();
       vi.mocked(api.get).mockResolvedValueOnce({ data: historyResponse });
 
       const result = await workSessionService.getHistory();
@@ -290,12 +263,12 @@ describe('workSessionService', () => {
     });
 
     it('deve repassar parâmetros de filtro por período, setor, status e paginação quando fornecidos', async () => {
-      const historyResponse: WorkSessionsHistoryResponse = {
+      const historyResponse = makeWorkSessionsHistoryResponse({
         sessoes: [],
         total: 0,
         pagina: 2,
         limite: 10,
-      };
+      });
       vi.mocked(api.get).mockResolvedValueOnce({ data: historyResponse });
 
       const params: GetWorkSessionsParams = {
@@ -319,12 +292,7 @@ describe('workSessionService', () => {
 
   describe('getSummary (GET /work-sessions/summary)', () => {
     it('deve retornar resumo de horas calculadas no período', async () => {
-      const summaryResponse: WorkSessionSummaryResponse = {
-        usuario_id: 'user-uuid-1',
-        inicio: '2026-09-26T00:00:00Z',
-        fim: '2026-09-27T00:00:00Z',
-        tempo_trabalhado_segundos: 12600,
-      };
+      const summaryResponse = makeWorkSessionSummaryResponse();
       vi.mocked(api.get).mockResolvedValueOnce({ data: summaryResponse });
 
       const params = {
@@ -340,13 +308,11 @@ describe('workSessionService', () => {
     });
 
     it('deve repassar setor_id e usuario_id quando fornecidos para líderes/admins', async () => {
-      const summaryResponse: WorkSessionSummaryResponse = {
+      const summaryResponse = makeWorkSessionSummaryResponse({
         usuario_id: 'colaborador-uuid',
         setor_id: 'setor-dev-uuid',
-        inicio: '2026-09-26T00:00:00Z',
-        fim: '2026-09-27T00:00:00Z',
         tempo_trabalhado_segundos: 28800,
-      };
+      });
       vi.mocked(api.get).mockResolvedValueOnce({ data: summaryResponse });
 
       const params: GetWorkSessionSummaryParams = {
@@ -367,16 +333,7 @@ describe('workSessionService', () => {
 
   describe('getMetricsSummary (GET /work-sessions/metrics/summary)', () => {
     it('deve chamar /work-sessions/metrics/summary com parâmetros corretos e retornar métricas consolidadas', async () => {
-      const mockMetricsResponse: MetricsSummaryResponse = {
-        inicio: '2026-09-01T00:00:00Z',
-        fim: '2026-09-30T23:59:59Z',
-        usuario_id: null,
-        setor_id: 'setor-dev-uuid',
-        tempo_trabalhado_segundos: 288000,
-        tempo_pausado_segundos: 18000,
-        sessoes_iniciadas: 20,
-        usuarios_com_tempo_trabalhado: 5,
-      };
+      const mockMetricsResponse = makeMetricsSummaryResponse();
       vi.mocked(api.get).mockResolvedValueOnce({ data: mockMetricsResponse });
 
       const params: GetMetricsSummaryParams = {
@@ -417,22 +374,7 @@ describe('workSessionService', () => {
 
   describe('getMetricsUsers (GET /work-sessions/metrics/users)', () => {
     it('deve chamar /work-sessions/metrics/users com paginação e retornar lista de métricas por usuário', async () => {
-      const mockMetricsUsersResponse: MetricsUsersResponse = {
-        inicio: '2026-09-01T00:00:00Z',
-        fim: '2026-09-30T23:59:59Z',
-        pagina: 1,
-        limite: 20,
-        total: 1,
-        usuarios: [
-          {
-            usuario_id: 'user-1',
-            nome_completo: 'Alice Dev',
-            tempo_trabalhado_segundos: 28800,
-            tempo_pausado_segundos: 1800,
-            sessoes_iniciadas: 4,
-          },
-        ],
-      };
+      const mockMetricsUsersResponse = makeMetricsUsersResponse();
       vi.mocked(api.get).mockResolvedValueOnce({
         data: mockMetricsUsersResponse,
       });
@@ -474,23 +416,7 @@ describe('workSessionService', () => {
 
   describe('getMetricsSectors (GET /work-sessions/metrics/sectors)', () => {
     it('deve buscar e retornar métricas agrupadas por setor com paginação', async () => {
-      const mockMetricsSectorsResponse: MetricsSectorsResponse = {
-        inicio: '2026-09-01T00:00:00Z',
-        fim: '2026-09-30T23:59:59Z',
-        pagina: 1,
-        limite: 10,
-        total: 1,
-        setores: [
-          {
-            setor_id: 'sector-dev-uuid',
-            setor_nome: 'Desenvolvimento',
-            tempo_trabalhado_segundos: 144000,
-            tempo_pausado_segundos: 7200,
-            sessoes_iniciadas: 15,
-            usuarios_com_tempo_trabalhado: 4,
-          },
-        ],
-      };
+      const mockMetricsSectorsResponse = makeMetricsSectorsResponse();
       vi.mocked(api.get).mockResolvedValueOnce({
         data: mockMetricsSectorsResponse,
       });
@@ -533,26 +459,7 @@ describe('workSessionService', () => {
 
   describe('getMetricsTimeline (GET /work-sessions/metrics/timeline)', () => {
     it('deve buscar e retornar dados da evolução temporal com agrupamento', async () => {
-      const mockMetricsTimelineResponse: MetricsTimelineResponse = {
-        inicio: '2026-10-19T00:00:00Z',
-        fim: '2026-10-25T23:59:59Z',
-        agrupamento: 'dia',
-        fuso: 'America/Sao_Paulo',
-        intervalos: [
-          {
-            inicio: '2026-10-19T00:00:00-03:00',
-            fim: '2026-10-20T00:00:00-03:00',
-            tempo_trabalhado_segundos: 28800, // 8h
-            tempo_pausado_segundos: 3600, // 1h
-          },
-          {
-            inicio: '2026-10-20T00:00:00-03:00',
-            fim: '2026-10-21T00:00:00-03:00',
-            tempo_trabalhado_segundos: 32400, // 9h
-            tempo_pausado_segundos: 1800, // 30m
-          },
-        ],
-      };
+      const mockMetricsTimelineResponse = makeMetricsTimelineResponse();
       vi.mocked(api.get).mockResolvedValueOnce({
         data: mockMetricsTimelineResponse,
       });
