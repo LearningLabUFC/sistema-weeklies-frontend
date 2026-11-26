@@ -1147,7 +1147,7 @@ export const HourReport = () => {
           </div>
 
           {/* Productivity & Executive Indicators Section */}
-          <Card className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/60">
+          <Card className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-sm bg-linear-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/60">
             <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-indigo-500" />
@@ -1163,7 +1163,6 @@ export const HourReport = () => {
 
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Indicador 1: Média por Colaborador */}
                 <div className="p-4 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span className="font-medium">Média por Colaborador</span>
@@ -1298,9 +1297,8 @@ export const HourReport = () => {
                 </div>
               ) : (
                 <>
-                  {/* Visual Bar Chart */}
                   <div className="overflow-x-auto pb-2">
-                    <div className="min-w-[500px] flex items-end gap-3 sm:gap-4 h-64 pt-6 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <div className="min-w-125 flex items-end gap-3 sm:gap-4 h-64 pt-6 pb-2 border-b border-slate-100 dark:border-slate-800">
                       {timelineMetrics.intervalos.map((interval, idx) => {
                         const maxTimelineTime = Math.max(
                           ...timelineMetrics.intervalos.map(
@@ -1349,11 +1347,11 @@ export const HourReport = () => {
                             </div>
 
                             {/* Bar Column Container */}
-                            <div className="w-full max-w-[44px] h-44 flex items-end justify-center gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 group-hover:border-indigo-200 dark:group-hover:border-indigo-900 transition-colors">
+                            <div className="w-full max-w-11 h-44 flex items-end justify-center gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 group-hover:border-indigo-200 dark:group-hover:border-indigo-900 transition-colors">
                               {/* Work Bar */}
                               <div
                                 style={{ height: `${workHeightPercent}%` }}
-                                className="w-1/2 rounded-t-md bg-gradient-to-t from-indigo-600 to-indigo-500 group-hover:from-indigo-500 group-hover:to-indigo-400 transition-all duration-300"
+                                className="w-1/2 rounded-t-md bg-linear-to-t from-indigo-600 to-indigo-500 group-hover:from-indigo-500 group-hover:to-indigo-400 transition-all duration-300"
                                 title={`Trabalhado: ${formatDuration(
                                   interval.tempo_trabalhado_segundos,
                                 )}`}
@@ -1362,7 +1360,7 @@ export const HourReport = () => {
                               {/* Pause Bar */}
                               <div
                                 style={{ height: `${pauseHeightPercent}%` }}
-                                className="w-1/2 rounded-t-md bg-gradient-to-t from-amber-500 to-amber-400 group-hover:from-amber-400 group-hover:to-amber-300 transition-all duration-300"
+                                className="w-1/2 rounded-t-md bg-linear-to-t from-amber-500 to-amber-400 group-hover:from-amber-400 group-hover:to-amber-300 transition-all duration-300"
                                 title={`Pausas: ${formatDuration(
                                   interval.tempo_pausado_segundos,
                                 )}`}

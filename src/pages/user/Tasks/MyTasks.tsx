@@ -159,13 +159,13 @@ export default function MyTasks() {
           <button
             type="button"
             onClick={() => setActiveTab('tasks')}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'tasks'
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <CheckSquare className="w-4 h-4" />
+            <CheckSquare className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
             <span>Minhas Tarefas (T01)</span>
             <Badge
               variant="secondary"
@@ -178,13 +178,13 @@ export default function MyTasks() {
           <button
             type="button"
             onClick={() => setActiveTab('assignments')}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'assignments'
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Mail className="w-4 h-4" />
+            <Mail className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
             <span>Convites de Colaboração (C01-C03)</span>
           </button>
         </div>

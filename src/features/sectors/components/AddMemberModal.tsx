@@ -182,8 +182,8 @@ export function AddMemberModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md overflow-hidden">
+        <form onSubmit={handleSubmit} className="min-w-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-indigo-600" />
@@ -195,7 +195,7 @@ export function AddMemberModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 min-w-0">
             {addMutation.error && (
               <div className="p-3 text-xs rounded-md bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200">
                 {addMutation.error.message}
@@ -221,28 +221,28 @@ export function AddMemberModal({
               </div>
             )}
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="search-user">Buscar usuário ativo</Label>
-              <div className="relative">
+              <div className="relative min-w-0">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="search-user"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Filtrar por nome ou e-mail..."
-                  className="pl-9"
+                  className="pl-9 w-full"
                   disabled={addMutation.isMutating}
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-center justify-between gap-2">
                 <Label htmlFor="select-user">
                   Usuário <span className="text-rose-500">*</span>
                 </Label>
                 {!isLoadingUsers && !loadError && rawUsers.length > 0 && (
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground shrink-0">
                     {availableUsers.length}{' '}
                     {availableUsers.length === 1 ? 'disponível' : 'disponíveis'}
                   </span>
@@ -263,7 +263,10 @@ export function AddMemberModal({
                     availableUsers.length === 0
                   }
                 >
-                  <SelectTrigger id="select-user">
+                  <SelectTrigger
+                    id="select-user"
+                    className="w-full min-w-0 overflow-hidden [&>span]:block [&>span]:min-w-0 [&>span]:truncate"
+                  >
                     <SelectValue
                       placeholder={
                         loadError
@@ -276,10 +279,12 @@ export function AddMemberModal({
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent className="max-h-56">
+                  <SelectContent className="w-(--radix-select-trigger-width) max-w-(--radix-select-trigger-width) max-h-56">
                     {availableUsers.map(u => (
                       <SelectItem key={u.id} value={u.id}>
-                        {u.nome_completo} ({u.email})
+                        <span className="block min-w-0 max-w-full truncate">
+                          {u.nome_completo} ({u.email})
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
